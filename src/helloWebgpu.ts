@@ -5,7 +5,9 @@ async function initWebGPU() {
         const adapter = await navigator.gpu.requestAdapter() as GPUAdapter
         const device = await adapter.requestDevice()
         console.log(device)
-        document.body.innerHTML = 'Hello WebGPU'
+        document.body.innerHTML = '<h1>Hello WebGPU</h1>'
+        for(let i in device.limits)
+            document.body.innerHTML += `<p>${i}:${device.limits[i as keyof GPUSupportedLimits]}</p>`
     }catch(error:any){
         document.body.innerHTML = error.message
     }
