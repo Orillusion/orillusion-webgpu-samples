@@ -26,10 +26,12 @@ npm run dev #or yarn run dev
 ```bash
 ├─ 📂 node_modules/   # Dependencies
 │  ├─ 📁 @webgpu      # WebGPU types for TS
-│  └─ 📁 ...            # Other dependencies (TypeScript, Vite, etc.)
+│  └─ 📁 ...          # Other dependencies (TypeScript, Vite, etc.)
 ├─ 📂 src/            # Source files
 │  ├─ 📁 shaders      # Folder for shader files
-│  └─ 📄 main.ts      # Triangle demo
+│  └─ 📄 *.ts         # TS files for each demo
+├─ 📂 samples/        # Sample html
+│  └─ 📄 *.html       # HTML entry for each demo
 ├─ 📄 .gitignore      # Ignore certain files in git repo
 ├─ 📄 index.html      # Entry page
 ├─ 📄 LICENSE         # MIT

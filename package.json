@@ -8,10 +8,8 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@webgpu/types": "^0.1.13",
     "typescript": "^4.5.4",
     "vite": "^2.8.0"
-  },
-  "dependencies": {
-    "@webgpu/types": "^0.1.13"
   }
 }
