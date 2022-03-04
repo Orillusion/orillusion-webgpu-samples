@@ -5,13 +5,13 @@ const devToken = 'Amu7sW/oEH3ZqF6SQcPOYVpF9KYNHShFxN1GzM5DY0QW6NwGnbe2kE/YyeQdkS
 module.exports = defineConfig({
 	plugins: [
 		{
-			name: 'isolation',
+			name: 'Origin-Trial',
 			configureServer: server => {
 				server.middlewares.use((_req, res, next) => {
 					res.setHeader("Origin-Trial", devToken)
-					next();
-				});
+					next()
+				})
 			}
-		},
+		}
 	]
 })
