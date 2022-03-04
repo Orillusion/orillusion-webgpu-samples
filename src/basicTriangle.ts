@@ -2,10 +2,10 @@ import triangleVertWGSL from './shaders/triangle.vert.wgsl?raw'
 import redFragWGSL from './shaders/red.frag.wgsl?raw'
 
 // initialize webgpu device & config canvas context
-async function initWebGPU(canvas:HTMLCanvasElement) {
+async function initWebGPU(canvas: HTMLCanvasElement) {
     if (!canvas)
         throw new Error('No Canvas')
-    const adapter = await navigator.gpu.requestAdapter() as GPUAdapter
+    const adapter = await navigator.gpu.requestAdapter()
     if (!adapter)
         //token will be maintained by orillusion frequently
         throw new Error('Webgpu not supported | Token is expired')
@@ -23,7 +23,7 @@ async function initWebGPU(canvas:HTMLCanvasElement) {
         // json specific format when key and value are the same
         device, format, size
     })
-    return {device, context, format}
+    return {device, context, format, size}
 }
 
 // create a simple pipiline
