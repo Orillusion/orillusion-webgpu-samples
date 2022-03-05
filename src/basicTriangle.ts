@@ -5,7 +5,10 @@ import redFragWGSL from './shaders/red.frag.wgsl?raw'
 async function initWebGPU(canvas: HTMLCanvasElement) {
     if (!canvas)
         throw new Error('No Canvas')
-    const adapter = await navigator.gpu.requestAdapter()
+    const adapter = await navigator.gpu.requestAdapter({
+        powerPreference: 'high-performance'
+        // powerPreference: 'low-power'
+    })
     if (!adapter)
         //token will be maintained by orillusion frequently
         throw new Error('Webgpu not supported | Token is expired')
@@ -18,14 +21,13 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     const size = [
         canvas.clientWidth * devicePixelRatio,
         canvas.clientHeight * devicePixelRatio,
-    ];
+    ]
     context.configure({
         // json specific format when key and value are the same
         device, format, size
     })
     return {device, context, format, size}
 }
-
 // create a simple pipiline
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promise<GPURenderPipeline> {
     const descriptor: GPURenderPipelineDescriptor = {
@@ -52,7 +54,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
     }
     return await device.createRenderPipelineAsync(descriptor)
 }
-
+// create & submit device commands
 function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderPipeline) {
     const commandEncoder = device.createCommandEncoder()
     const view = context.getCurrentTexture().createView()
