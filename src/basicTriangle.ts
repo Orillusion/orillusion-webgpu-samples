@@ -5,16 +5,17 @@ import redFragWGSL from './shaders/red.frag.wgsl?raw'
 async function initWebGPU(canvas: HTMLCanvasElement) {
     if (!canvas)
         throw new Error('No Canvas')
+    if(!navigator.gpu)
+        throw new Error('Not Support WebGPU')
     const adapter = await navigator.gpu.requestAdapter({
         powerPreference: 'high-performance'
         // powerPreference: 'low-power'
     })
     if (!adapter)
-        //token will be maintained by orillusion frequently
-        throw new Error('Webgpu not supported | Token is expired')
+        throw new Error('No Adapter Found')
     const device = await adapter.requestDevice()
     if (!device)
-        throw new Error('No Device')
+        throw new Error('No Device Found')
     const context = canvas.getContext('webgpu') as GPUCanvasContext
     const format = context.getPreferredFormat(adapter)
     const devicePixelRatio = window.devicePixelRatio || 1
