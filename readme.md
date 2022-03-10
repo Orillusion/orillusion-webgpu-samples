@@ -37,8 +37,7 @@ npm run dev #or yarn run dev
 ├─ 📄 LICENSE         # MIT
 ├─ 📄 logo.png        # Orillusion logo image
 ├─ 📄 package.json    # Node package file
-├─ 📄 readme.md       # Read Me!
 ├─ 📄 tsconfig.json   # TS configuration file
-└─ 📄 vite.config.js  # vite configuration file
- 
+├─ 📄 vite.config.js  # vite configuration file
+└─ 📄 readme.md       # Read Me!
 ```
