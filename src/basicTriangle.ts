@@ -86,10 +86,7 @@ async function run(){
     const canvas = document.querySelector('canvas') as HTMLCanvasElement
     const {device, context, format} = await initWebGPU(canvas)
     const pipeline = await initPipeline(device, format)
-    // start runner loop
-    requestAnimationFrame(()=>{
-        draw(device, context, pipeline)
-    })
+    // start draw
+    draw(device, context, pipeline)
 }
 run()
-

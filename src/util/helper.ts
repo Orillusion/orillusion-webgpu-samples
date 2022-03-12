@@ -12,7 +12,6 @@ const getShader = (code:string):string  => {
         code = code.replace(/\@(\w+\((\w+|\d+)\))/g, '[[$1]]')
     if(version < 99)
         code = code.replace(/struct\s/g, '[[block]] struct ')
-    console.log(code)
     return code
 }
 
