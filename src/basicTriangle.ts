@@ -22,7 +22,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     const devicePixelRatio = window.devicePixelRatio || 1
     const size = [
         canvas.clientWidth * devicePixelRatio,
-        canvas.clientHeight * devicePixelRatio,
+        canvas.clientHeight * devicePixelRatio
     ]
     context.configure({
         // json specific format when key and value are the same
@@ -67,7 +67,7 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
                 loadOp: 'clear', // clear/load
                 storeOp: 'store', // store/discard
-                // before 18.02.2022
+                // before v100
                 loadValue: { r: 0, g: 0, b: 0, a: 1.0 }
             }
         ]
@@ -76,7 +76,7 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
     passEncoder.setPipeline(pipeline)
     // 3 vertex form a triangle
     passEncoder.draw(3, 1, 0, 0)
-    // endPass is deprecated after 18.02.2022
+    // endPass is deprecated after v100
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])

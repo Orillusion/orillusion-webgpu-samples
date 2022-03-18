@@ -113,7 +113,7 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
                 loadOp: 'clear',
                 storeOp: 'store',
-                // before 18.02.2022
+                // before v101
                 loadValue: { r: 0, g: 0, b: 0, a: 1.0 }
             }
         ]
@@ -126,7 +126,7 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
     passEncoder.setVertexBuffer(0, vertexBuffer)
     // 3 vertex form a triangle
     passEncoder.draw(triangle.vertexCount, 1, 0, 0)
-    // endPass is deprecated after 18.02.2022
+    // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])
