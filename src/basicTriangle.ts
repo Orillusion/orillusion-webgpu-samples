@@ -35,13 +35,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
     const descriptor: GPURenderPipelineDescriptor = {
         vertex: {
             module: device.createShaderModule({
-                code: getShader(triangleVertWGSL),
+                code: getShader(triangleVertWGSL)
             }),
             entryPoint: 'main'
         },
         fragment: {
             module: device.createShaderModule({
-                code: getShader(redFragWGSL),
+                code: getShader(redFragWGSL)
             }),
             entryPoint: 'main',
             targets: [
@@ -65,8 +65,8 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
             {
                 view: view,
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
-                loadOp: 'clear',
-                storeOp: 'store',
+                loadOp: 'clear', // clear/load
+                storeOp: 'store', // store/discard
                 // before 18.02.2022
                 loadValue: { r: 0, g: 0, b: 0, a: 1.0 }
             }

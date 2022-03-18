@@ -71,22 +71,23 @@
     </div>
     <iframe></iframe>
     <a class="src" target="_blank">&lt; &gt;</a>
-
-    <script type="module">
-        const path = '/samples/'
+    <script>
         const iframe = document.querySelector('iframe')
         const button = document.querySelector('.src')
         const samples = document.querySelectorAll('.sample')
         for(let sample of samples){
             sample.addEventListener('click', ()=>{
-                iframe.src = path + sample.target + '.html'
+                window.location.href = '/#' + sample.target
+                iframe.src = '/samples/' + sample.target + '.html'
                 button.href = 'https://github.com/Orillusion/orillusion-webgpu-samples/tree/main/src/' + sample.target + '.ts'
                 document.querySelector('.active').classList.remove('active')
                 sample.classList.add('active')
             })
-            if(sample.classList.contains('active'))
-                sample.click()
         }
+        if(window.location.hash)
+            document.querySelector(`[target=${window.location.hash.slice(1)}]`).click()
+        else
+            document.querySelector('.sample.active').click()
     </script>
 </body>
 </html>

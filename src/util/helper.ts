@@ -6,7 +6,7 @@ const version:number = (()=>{
     return 0
 })()
 
-// parse shader format based on chrome version
+// parse shader format to lower chrome version (96 - 101)
 const getShader = (code:string):string  => {
     if(version < 100)
         code = code.replace(/\@(\w+\((\w+|\d+)\))/g, '[[$1]]')
