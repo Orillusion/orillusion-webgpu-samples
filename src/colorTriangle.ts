@@ -1,5 +1,5 @@
-import basicVertWGSL from './shaders/basic.vert.wgsl?raw'
-import colorFragWGSL from './shaders/color.frag.wgsl?raw'
+import basicVert from './shaders/basic.vert.wgsl?raw'
+import colorFrag from './shaders/color.frag.wgsl?raw'
 import {getShader} from './util/helper'
 import * as triangle from './util/triangle'
 
@@ -37,7 +37,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
         label: 'Basic Pipline',
         vertex: {
             module: device.createShaderModule({
-                code: getShader(basicVertWGSL),
+                code: getShader(basicVert),
             }),
             entryPoint: 'main',
             buffers: [{
@@ -54,7 +54,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
         },
         fragment: {
             module: device.createShaderModule({
-                code: getShader(colorFragWGSL),
+                code: getShader(colorFrag),
             }),
             entryPoint: 'main',
             targets: [
