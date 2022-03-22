@@ -1,6 +1,5 @@
 import triangleVert from './shaders/triangle.vert.wgsl?raw'
 import redFrag from './shaders/red.frag.wgsl?raw'
-import {getShader} from './util/helper'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
@@ -26,7 +25,9 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     ]
     context.configure({
         // json specific format when key and value are the same
-        device, format, size
+        device, format, size,
+        // prevent chrome warning
+        compositingAlphaMode: 'opaque'
     })
     return {device, context, format, size}
 }
@@ -35,13 +36,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
     const descriptor: GPURenderPipelineDescriptor = {
         vertex: {
             module: device.createShaderModule({
-                code: getShader(triangleVert)
+                code: triangleVert
             }),
             entryPoint: 'main'
         },
         fragment: {
             module: device.createShaderModule({
-                code: getShader(redFrag)
+                code: redFrag
             }),
             entryPoint: 'main',
             targets: [

@@ -1,6 +1,5 @@
 import basicVert from './shaders/basic.vert.wgsl?raw'
 import colorFrag from './shaders/color.frag.wgsl?raw'
-import {getShader} from './util/helper'
 import * as triangle from './util/triangle'
 
 // initialize webgpu device & config canvas context
@@ -27,7 +26,9 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     ]
     context.configure({
         // json specific format when key and value are the same
-        device, format, size
+        device, format, size,
+        // prevent chrome warning after v102
+        compositingAlphaMode: 'opaque'
     })
     return {device, context, format, size}
 }
@@ -37,7 +38,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
         label: 'Basic Pipline',
         vertex: {
             module: device.createShaderModule({
-                code: getShader(basicVert),
+                code: basicVert,
             }),
             entryPoint: 'main',
             buffers: [{
@@ -54,7 +55,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
         },
         fragment: {
             module: device.createShaderModule({
-                code: getShader(colorFrag),
+                code: colorFrag,
             }),
             entryPoint: 'main',
             targets: [
