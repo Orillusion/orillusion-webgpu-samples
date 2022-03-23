@@ -2,7 +2,6 @@
 
 # Orillusion-webgpu-samples
 
-
 ## Install and Run
 
 Type the following in any terminal:
@@ -41,3 +40,9 @@ npm run dev #or yarn run dev
 ├─ 📄 vite.config.js  # vite configuration file
 └─ 📄 readme.md       # Read Me!
 ```
+
+## How to enable WebGPU
+1. We have embedded a WebGPU Origin-Trail token in `tsconfig.json`, you can use WebGPU via Chrome v94-101
+2. For Chrome Canary v102+, please open `chrome://flags/#enable-unsafe-webgpu`, and enable the flag
+3. For Edge Canary, please open `edge://flags/#enable-unsafe-webgpu`, and enable the flag
+4. For FireFox Nightly, please open `about:config`, and change `dom.webgpu.enabled` to `true`
