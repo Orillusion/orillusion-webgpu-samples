@@ -4,8 +4,6 @@ import * as triangle from './util/triangle'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
-    if (!canvas)
-        throw new Error('No Canvas')
     if(!navigator.gpu)
         throw new Error('Not Support WebGPU')
     const adapter = await navigator.gpu.requestAdapter({
@@ -15,8 +13,6 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     if (!adapter)
         throw new Error('No Adapter Found')
     const device = await adapter.requestDevice()
-    if (!device)
-        throw new Error('No Device Found')
     const context = canvas.getContext('webgpu') as GPUCanvasContext
     const format = context.getPreferredFormat(adapter)
     const devicePixelRatio = window.devicePixelRatio || 1
@@ -134,7 +130,9 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
 }
 
 async function run(){
-    const canvas = document.querySelector('canvas') as HTMLCanvasElement
+    const canvas = document.querySelector('canvas')
+    if (!canvas)
+        throw new Error('No Canvas')
     const {device, context, format} = await initWebGPU(canvas)
     const {pipeline, uniformGroup, colorBuffer, vertexBuffer} = await initPipeline(device, format)
     // first draw

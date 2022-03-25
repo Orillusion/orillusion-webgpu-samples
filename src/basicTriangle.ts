@@ -3,8 +3,6 @@ import redFrag from './shaders/red.frag.wgsl?raw'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
-    if (!canvas)
-        throw new Error('No Canvas')
     if(!navigator.gpu)
         throw new Error('Not Support WebGPU')
     const adapter = await navigator.gpu.requestAdapter({
@@ -14,8 +12,6 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     if (!adapter)
         throw new Error('No Adapter Found')
     const device = await adapter.requestDevice()
-    if (!device)
-        throw new Error('No Device Found')
     const context = canvas.getContext('webgpu') as GPUCanvasContext
     const format = context.getPreferredFormat(adapter)
     const devicePixelRatio = window.devicePixelRatio || 1
@@ -40,6 +36,9 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
             }),
             entryPoint: 'main'
         },
+        primitive: {
+            topology: 'triangle-list' // try point-list, line-list, line-strip, triangle-strip?
+        },
         fragment: {
             module: device.createShaderModule({
                 code: redFrag
@@ -50,9 +49,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promis
                     format: format
                 }
             ]
-        },
-        primitive: {
-            topology: 'triangle-list' // try point-list, line-list, line-strip, triangle-strip?
         }
     }
     return await device.createRenderPipelineAsync(descriptor)
@@ -68,7 +64,7 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
                 loadOp: 'clear', // clear/load
                 storeOp: 'store', // store/discard
-                // before v100
+                // before v101
                 loadValue: { r: 0, g: 0, b: 0, a: 1.0 }
             }
         ]
@@ -77,14 +73,16 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
     passEncoder.setPipeline(pipeline)
     // 3 vertex form a triangle
     passEncoder.draw(3, 1, 0, 0)
-    // endPass is deprecated after v100
+    // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])
 }
 
 async function run(){
-    const canvas = document.querySelector('canvas') as HTMLCanvasElement
+    const canvas = document.querySelector('canvas')
+    if (!canvas)
+        throw new Error('No Canvas')
     const {device, context, format} = await initWebGPU(canvas)
     const pipeline = await initPipeline(device, format)
     // start draw
