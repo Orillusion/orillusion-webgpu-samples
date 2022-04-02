@@ -1,4 +1,4 @@
-import basicVert from './shaders/basic.vert.wgsl?raw'
+import positionVert from './shaders/position.vert.wgsl?raw'
 import colorFrag from './shaders/color.frag.wgsl?raw'
 import * as triangle from './util/triangle'
 
@@ -6,10 +6,7 @@ import * as triangle from './util/triangle'
 async function initWebGPU(canvas: HTMLCanvasElement) {
     if(!navigator.gpu)
         throw new Error('Not Support WebGPU')
-    const adapter = await navigator.gpu.requestAdapter({
-        powerPreference: 'high-performance'
-        // powerPreference: 'low-power'
-    })
+    const adapter = await navigator.gpu.requestAdapter()
     if (!adapter)
         throw new Error('No Adapter Found')
     const device = await adapter.requestDevice()
@@ -21,20 +18,20 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
         height: canvas.clientHeight * devicePixelRatio,
     }
     context.configure({
-        // json specific format when key and value are the same
         device, format, size,
         // prevent chrome warning after v102
         compositingAlphaMode: 'opaque'
     })
     return {device, context, format, size}
 }
-// create a simple pipiline
+
+// create a simple pipiline & buffers
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
     const pipeline = await device.createRenderPipelineAsync({
         label: 'Basic Pipline',
         vertex: {
             module: device.createShaderModule({
-                code: basicVert,
+                code: positionVert,
             }),
             entryPoint: 'main',
             buffers: [{
@@ -99,6 +96,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
     // return all vars
     return {pipeline, vertexBuffer, colorBuffer, uniformGroup}
 }
+
 // create & submit device commands
 function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderPipeline, uniformGroup: GPUBindGroup, vertexBuffer: GPUBuffer) {
     const commandEncoder = device.createCommandEncoder()
@@ -135,9 +133,15 @@ async function run(){
         throw new Error('No Canvas')
     const {device, context, format} = await initWebGPU(canvas)
     const {pipeline, uniformGroup, colorBuffer, vertexBuffer} = await initPipeline(device, format)
-    // first draw
-    draw(device, context, pipeline, uniformGroup, vertexBuffer)
-    // update draw if color changed
+    
+    // start render loop
+    function frame(){
+        draw(device, context, pipeline, uniformGroup, vertexBuffer)
+        requestAnimationFrame(frame)
+    }
+    frame()
+
+    // update colorBuffer if color changed
     document.querySelector('input')?.addEventListener('input', (e:Event) => {
         // get hex color string
         const color = (e.target as HTMLInputElement).value
@@ -148,8 +152,6 @@ async function run(){
         const b = +('0x' + color.slice(5, 7)) / 255
         // update colorBuffer with new rgba color
         device.queue.writeBuffer(colorBuffer, 0, new Float32Array([r, g, b, 1]))
-        // re-draw
-        draw(device, context, pipeline, uniformGroup, vertexBuffer)
     })
     // re-configure context on resize
     window.addEventListener('resize', ()=>{
@@ -161,7 +163,6 @@ async function run(){
             },
             compositingAlphaMode: 'opaque'
         })
-        draw(device, context, pipeline, uniformGroup, vertexBuffer)
     })
 }
 run()
