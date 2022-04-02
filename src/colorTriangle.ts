@@ -16,10 +16,10 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('webgpu') as GPUCanvasContext
     const format = context.getPreferredFormat(adapter)
     const devicePixelRatio = window.devicePixelRatio || 1
-    const size = [
-        canvas.clientWidth * devicePixelRatio,
-        canvas.clientHeight * devicePixelRatio,
-    ]
+    const size = {
+        width: canvas.clientWidth * devicePixelRatio,
+        height: canvas.clientHeight * devicePixelRatio,
+    }
     context.configure({
         // json specific format when key and value are the same
         device, format, size,
@@ -143,12 +143,24 @@ async function run(){
         const color = (e.target as HTMLInputElement).value
         console.log(color)
         // parse hex color into rgb
-        const r = +('0x' + color.slice(1, 3))
-        const g = +('0x' + color.slice(3, 5))
-        const b = +('0x' + color.slice(5, 7))
+        const r = +('0x' + color.slice(1, 3)) / 255
+        const g = +('0x' + color.slice(3, 5)) / 255
+        const b = +('0x' + color.slice(5, 7)) / 255
         // update colorBuffer with new rgba color
-        device.queue.writeBuffer(colorBuffer, 0, new Float32Array([r/255, g/255, b/255, 1]))
+        device.queue.writeBuffer(colorBuffer, 0, new Float32Array([r, g, b, 1]))
         // re-draw
+        draw(device, context, pipeline, uniformGroup, vertexBuffer)
+    })
+    // re-configure context on resize
+    window.addEventListener('resize', ()=>{
+        context.configure({
+            device, format,
+            size: {
+                width: canvas.clientWidth * devicePixelRatio,
+                height: canvas.clientHeight * devicePixelRatio
+            },
+            compositingAlphaMode: 'opaque'
+        })
         draw(device, context, pipeline, uniformGroup, vertexBuffer)
     })
 }

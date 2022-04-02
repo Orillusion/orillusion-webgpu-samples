@@ -15,10 +15,10 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     const context = canvas.getContext('webgpu') as GPUCanvasContext
     const format = context.getPreferredFormat(adapter)
     const devicePixelRatio = window.devicePixelRatio || 1
-    const size = [
-        canvas.clientWidth * devicePixelRatio,
-        canvas.clientHeight * devicePixelRatio
-    ]
+    const size = {
+        width: canvas.clientWidth * devicePixelRatio,
+        height: canvas.clientHeight * devicePixelRatio
+    }
     context.configure({
         // json specific format when key and value are the same
         device, format, size,
@@ -87,5 +87,18 @@ async function run(){
     const pipeline = await initPipeline(device, format)
     // start draw
     draw(device, context, pipeline)
+    
+    // re-configure context on resize
+    window.addEventListener('resize', ()=>{
+        context.configure({
+            device, format,
+            size: {
+                width: canvas.clientWidth * devicePixelRatio,
+                height: canvas.clientHeight * devicePixelRatio
+            },
+            compositingAlphaMode: 'opaque'
+        })
+        draw(device, context, pipeline)
+    })
 }
 run()
