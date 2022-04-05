@@ -72,7 +72,7 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     passEncoder.setPipeline(pipeline)
     // 3 vertex form a triangle
-    passEncoder.draw(3, 1, 0, 0)
+    passEncoder.draw(3)
     // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
     // webgpu run in a separate process, all the commands will be executed after submit

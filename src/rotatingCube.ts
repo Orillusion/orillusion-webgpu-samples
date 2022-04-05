@@ -183,7 +183,7 @@ function draw(
     // set vertex
     passEncoder.setVertexBuffer(0, piplineObj.vertexBuffer)
     // draw vertex count of cube
-    passEncoder.draw(cube.vertexCount, 1, 0, 0)
+    passEncoder.draw(cube.vertexCount)
     // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
     // webgpu run in a separate process, all the commands will be executed after submit
