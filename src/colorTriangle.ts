@@ -142,7 +142,7 @@ async function run(){
     frame()
 
     // update colorBuffer if color changed
-    document.querySelector('input')?.addEventListener('input', (e:Event) => {
+    document.querySelector('input[type="color"]')?.addEventListener('input', (e:Event) => {
         // get hex color string
         const color = (e.target as HTMLInputElement).value
         console.log(color)
@@ -150,8 +150,20 @@ async function run(){
         const r = +('0x' + color.slice(1, 3)) / 255
         const g = +('0x' + color.slice(3, 5)) / 255
         const b = +('0x' + color.slice(5, 7)) / 255
-        // update colorBuffer with new rgba color
+        // write colorBuffer with new color
         device.queue.writeBuffer(colorBuffer, 0, new Float32Array([r, g, b, 1]))
+    })
+    // update vertexBuffer
+    document.querySelector('input[type="range"]')?.addEventListener('input', (e:Event) => {
+        // get input value
+        const value = +(e.target as HTMLInputElement).value
+        console.log(value)
+        // chagne vertex 0/3/6
+        triangle.vertex[0] = value
+        triangle.vertex[3] = -0.5 + value
+        triangle.vertex[6] = 0.5 + value
+        // write vertexBuffer with new vertex
+        device.queue.writeBuffer(vertexBuffer, 0, triangle.vertex)
     })
     // re-configure context on resize
     window.addEventListener('resize', ()=>{
