@@ -35,13 +35,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
             }),
             entryPoint: 'main',
             buffers: [{
-                arrayStride: 3 * 4, // 3 points per triangle,
+                arrayStride: 3 * 4, // 3 float32,
                 attributes: [
                     {
-                      // position
-                      shaderLocation: 0,
-                      offset: 0,
-                      format: 'float32x3',
+                        // position xyz
+                        shaderLocation: 0,
+                        offset: 0,
+                        format: 'float32x3',
                     }
                 ]
             }]
@@ -159,7 +159,7 @@ async function run(){
         const value = +(e.target as HTMLInputElement).value
         console.log(value)
         // chagne vertex 0/3/6
-        triangle.vertex[0] = value
+        triangle.vertex[0] = 0 + value
         triangle.vertex[3] = -0.5 + value
         triangle.vertex[6] = 0.5 + value
         // write vertexBuffer with new vertex
