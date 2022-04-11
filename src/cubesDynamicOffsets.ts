@@ -28,8 +28,42 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
 
 // create pipiline & buffers
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
+    // create vertex buffer
+    const vertexBuffer = device.createBuffer({
+        label: 'GPUBuffer store vertex',
+        size: cube.vertex.byteLength,
+        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+    })
+    device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
+    // create a (256 + 4 * 16) matrix
+    const buffer = device.createBuffer({
+        label: 'GPUBuffer store 2 4*4 matrix',
+        size: 256 + 4 * 16, // 2 matrix with 256-byte aligned
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    })
+
+    // create group layout for dynamicOffset
+    const dynamicBindGroupLayout = device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.VERTEX,
+                buffer: {
+                    type: 'uniform',
+                    hasDynamicOffset: true,
+                    minBindingSize: 0
+                }
+            }
+        ]
+    })
+
+    // create pipline layout for dynamicOffset
+    const dynamicPipelineLayout = device.createPipelineLayout({
+        bindGroupLayouts: [dynamicBindGroupLayout]
+    });
     const pipeline = await device.createRenderPipelineAsync({
         label: 'Basic Pipline',
+        layout: dynamicPipelineLayout,
         vertex: {
             module: device.createShaderModule({
                 code: basicVert,
@@ -77,37 +111,23 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
             format: 'depth24plus',
         }
     } as GPURenderPipelineDescriptor)
-    
-    // create vertex buffer
-    const vertexBuffer = device.createBuffer({
-        label: 'GPUBuffer store vertex',
-        size: cube.vertex.byteLength,
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    })
-    device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
 
-    // create matrix buffer
-    const matrixBuffer = device.createBuffer({
-        label: 'GPUBuffer store 4x4 matrix',
-        size: 4 * 4 * 4, // 4 x 4 x float32
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    })
-    
-    // create a uniform group for Matrix
-    const uniformGroup = device.createBindGroup({
-        label: 'Uniform Group with Matrix',
-        layout: pipeline.getBindGroupLayout(0),
+    // create a uniform group with dynamicOffsets
+    const group = device.createBindGroup({
+        layout: dynamicBindGroupLayout,
         entries: [
             {
                 binding: 0,
                 resource: {
-                    buffer: matrixBuffer
+                    buffer: buffer,
+                    offset: 0,
+                    size: 4 * 16
                 }
             }
         ]
     })
     // return all vars
-    return {pipeline, vertexBuffer, matrixBuffer, uniformGroup}
+    return {pipeline, vertexBuffer, buffer, group}
 }
 
 // create a rotation matrix
@@ -138,10 +158,10 @@ function draw(
     context: GPUCanvasContext,
     size: {width:number, height: number},
     piplineObj: {
-        pipeline: GPURenderPipeline;
-        vertexBuffer: GPUBuffer;
-        matrixBuffer: GPUBuffer;
-        uniformGroup: GPUBindGroup;
+        pipeline: GPURenderPipeline,
+        vertexBuffer: GPUBuffer,
+        buffer: GPUBuffer,
+        group: GPUBindGroup
     }
 ) {
     // start encoder
@@ -171,12 +191,16 @@ function draw(
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     passEncoder.setPipeline(piplineObj.pipeline)
-    // set uniformGroup
-    passEncoder.setBindGroup(0, piplineObj.uniformGroup)
     // set vertex
     passEncoder.setVertexBuffer(0, piplineObj.vertexBuffer)
-    // draw vertex count of cube
-    passEncoder.draw(cube.vertexCount)
+    {
+        // draw first cube with dynamicOffset 0
+        passEncoder.setBindGroup(0, piplineObj.group, [0])
+        passEncoder.draw(cube.vertexCount)
+        // draw second cube with dynamicOffset 256
+        passEncoder.setBindGroup(0, piplineObj.group, [256])
+        passEncoder.draw(cube.vertexCount)
+    }
     // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
     // webgpu run in a separate process, all the commands will be executed after submit
@@ -192,17 +216,31 @@ async function run(){
     
     // start loop
     function frame(){
-        // first, update transform matrix
+        // first, update two transform matrixs
         const aspect = size.width/ size.height
-        const position = {x:0, y:0, z: -4}
         const now = Date.now() / 1000
-        const rotation = {x: Math.sin(now), y: Math.cos(now), z:0}
-        const mvpMatrix = getMvpMatrix(aspect, position, rotation)
-        device.queue.writeBuffer(
-            piplineObj.matrixBuffer,
-            0,
-            mvpMatrix.buffer
-        )
+        {
+            // first cube
+            const position1 = {x:2, y:0, z: -7}
+            const rotation1 = {x: Math.sin(now), y: Math.cos(now), z:0}
+            const mvpMatrix1 = getMvpMatrix(aspect, position1, rotation1)
+            device.queue.writeBuffer(
+                piplineObj.buffer,
+                0,
+                mvpMatrix1.buffer
+            )
+        }
+        {
+            // second cube
+            const position2 = {x:-2, y:0, z: -7}
+            const rotation2 = {x: Math.cos(now), y: Math.sin(now), z:0}
+            const mvpMatrix2 = getMvpMatrix(aspect, position2, rotation2)
+            device.queue.writeBuffer(
+                piplineObj.buffer,
+                256,
+                mvpMatrix2.buffer
+            )
+        }
         // then draw
         draw(device, context, size, piplineObj)
         requestAnimationFrame(frame)

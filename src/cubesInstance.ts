@@ -1,5 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix'
-import basicVert from './shaders/basic.vert.wgsl?raw'
+import basicInstanced from './shaders/basic.instanced.vert.wgsl?raw'
 import positionFrag from './shaders/position.frag.wgsl?raw'
 import * as cube from './util/cube'
 
@@ -27,12 +27,12 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
 }
 
 // create pipiline & buffers
-async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
+async function initPipeline(device: GPUDevice, format: GPUTextureFormat, NUM:number) {
     const pipeline = await device.createRenderPipelineAsync({
         label: 'Basic Pipline',
         vertex: {
             module: device.createShaderModule({
-                code: basicVert,
+                code: basicInstanced,
             }),
             entryPoint: 'main',
             buffers: [{
@@ -77,7 +77,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
             format: 'depth24plus',
         }
     } as GPURenderPipelineDescriptor)
-    
     // create vertex buffer
     const vertexBuffer = device.createBuffer({
         label: 'GPUBuffer store vertex',
@@ -85,29 +84,28 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
         usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     })
     device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
-
-    // create matrix buffer
-    const matrixBuffer = device.createBuffer({
-        label: 'GPUBuffer store 4x4 matrix',
-        size: 4 * 4 * 4, // 4 x 4 x float32
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    })
     
+    // create a 4x4xCount STORAGE buffer to store matrix
+    const buffer = device.createBuffer({
+        label: 'GPUBuffer store n*4x4 matrix',
+        size: 4 * 4 * 4 * NUM, // 4 x 4 x float32 x Object Count
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+    })
     // create a uniform group for Matrix
-    const uniformGroup = device.createBindGroup({
-        label: 'Uniform Group with Matrix',
+    const group = device.createBindGroup({
+        label: 'Uniform Group with matrix',
         layout: pipeline.getBindGroupLayout(0),
         entries: [
             {
                 binding: 0,
                 resource: {
-                    buffer: matrixBuffer
+                    buffer: buffer
                 }
             }
         ]
     })
     // return all vars
-    return {pipeline, vertexBuffer, matrixBuffer, uniformGroup}
+    return {pipeline, vertexBuffer, buffer, group, NUM}
 }
 
 // create a rotation matrix
@@ -138,13 +136,13 @@ function draw(
     context: GPUCanvasContext,
     size: {width:number, height: number},
     piplineObj: {
-        pipeline: GPURenderPipeline;
-        vertexBuffer: GPUBuffer;
-        matrixBuffer: GPUBuffer;
-        uniformGroup: GPUBindGroup;
+        pipeline: GPURenderPipeline,
+        vertexBuffer: GPUBuffer,
+        buffer: GPUBuffer,
+        group: GPUBindGroup,
+        NUM: number
     }
 ) {
-    // start encoder
     const commandEncoder = device.createCommandEncoder()
     const colorView = context.getCurrentTexture().createView()
     const depthView = device.createTexture({
@@ -171,12 +169,13 @@ function draw(
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     passEncoder.setPipeline(piplineObj.pipeline)
-    // set uniformGroup
-    passEncoder.setBindGroup(0, piplineObj.uniformGroup)
     // set vertex
     passEncoder.setVertexBuffer(0, piplineObj.vertexBuffer)
-    // draw vertex count of cube
-    passEncoder.draw(cube.vertexCount)
+    {
+        // draw two cubes in one call
+        passEncoder.setBindGroup(0, piplineObj.group)
+        passEncoder.draw(cube.vertexCount, piplineObj.NUM)
+    }
     // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
     // webgpu run in a separate process, all the commands will be executed after submit
@@ -187,23 +186,42 @@ async function run(){
     const canvas = document.querySelector('canvas')
     if (!canvas)
         throw new Error('No Canvas')
-    const {device, context, format, size} = await initWebGPU(canvas)
-    const piplineObj = await initPipeline(device, format)
     
+    const NUM = 10
+    const {device, context, format, size} = await initWebGPU(canvas)
+    const piplineObj = await initPipeline(device, format, NUM)
+    
+    // create objects
+    const aspect = size.width/ size.height
+    const objects:any[] = []
+    for(let i = 0; i < NUM; i++)
+    {
+        // craete simple object
+        const position = {x: Math.random() * 20 - 10, y: Math.random() * 20 - 10, z: - 20}
+        const rotation = {x: 0, y: 0, z: 0}
+        objects.push({position, rotation})
+    }
+    // const allMatrix = new Float32Array(NUM * 4 * 4)
     // start loop
     function frame(){
-        // first, update transform matrix
-        const aspect = size.width/ size.height
-        const position = {x:0, y:0, z: -4}
-        const now = Date.now() / 1000
-        const rotation = {x: Math.sin(now), y: Math.cos(now), z:0}
-        const mvpMatrix = getMvpMatrix(aspect, position, rotation)
-        device.queue.writeBuffer(
-            piplineObj.matrixBuffer,
-            0,
-            mvpMatrix.buffer
-        )
-        // then draw
+        // update rotation for each object
+        for(let i = 0; i < objects.length - 1; i++){
+            const now = Date.now() / 1000
+            objects[i].rotation.x = Math.sin(now + i)
+            objects[i].rotation.y = Math.cos(now + i)
+            const mvpMatrix = getMvpMatrix(aspect, objects[i].position, objects[i].rotation)
+            // update buffer based on offset
+            device.queue.writeBuffer(
+                piplineObj.buffer,
+                i * 4 * 4 * 4, // offset for each object, no need to 256-byte aligned
+                mvpMatrix
+            )
+            // or save to allMatrix first
+            // allMatrix.set(mvpMatrix, i * 4 * 4)
+        }
+        // the better way is update buffer in one write after loop
+        // device.queue.writeBuffer(piplineObj.buffer, 0, allMatrix)
+
         draw(device, context, size, piplineObj)
         requestAnimationFrame(frame)
     }
