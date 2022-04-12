@@ -1,7 +1,7 @@
-import { mat4, vec3 } from 'gl-matrix'
 import basicVert from './shaders/basic.vert.wgsl?raw'
 import positionFrag from './shaders/position.frag.wgsl?raw'
 import * as cube from './util/cube'
+import { getMvpMatrix } from './util/math'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
@@ -123,28 +123,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
     return {pipeline, vertexBuffer, buffer, group1, group2}
 }
 
-// create a rotation matrix
-function getMvpMatrix(
-    aspect: number,
-    positioin: {x:number, y:number, z:number},
-    rotation: {x:number, y:number, z:number}
-){
-    // create a perspective Matrix
-    const projectionMatrix = mat4.create()
-    mat4.perspective(projectionMatrix, (2 * Math.PI) / 5, aspect, 1, 100.0)
-    // create modelView Matrix
-    const viewMatrix = mat4.create()
-    // translate position
-    mat4.translate(viewMatrix, viewMatrix, vec3.fromValues(positioin.x, positioin.y, positioin.z))
-    // rotate
-    mat4.rotate(viewMatrix, viewMatrix, 1, vec3.fromValues(rotation.x, rotation.y, rotation.z))
-    // create mvp matrix
-    const modelViewProjectionMatrix = mat4.create()
-    mat4.multiply(modelViewProjectionMatrix, projectionMatrix, viewMatrix)
-    // return matrix as Float32Array
-    return modelViewProjectionMatrix as Float32Array
-}
-
 // create & submit device commands
 function draw(
     device: GPUDevice, 
@@ -217,7 +195,8 @@ async function run(){
             // first cube
             const position1 = {x:2, y:0, z: -7}
             const rotation1 = {x: Math.sin(now), y: Math.cos(now), z:0}
-            const mvpMatrix1 = getMvpMatrix(aspect, position1, rotation1)
+            const scale1 = {x:1, y:1, z: 1}
+            const mvpMatrix1 = getMvpMatrix(aspect, position1, rotation1, scale1)
             device.queue.writeBuffer(
                 piplineObj.buffer,
                 0,
@@ -228,7 +207,8 @@ async function run(){
             // second cube with 256-byte offset
             const position2 = {x:-2, y:0, z: -7}
             const rotation2 = {x: Math.cos(now), y: Math.sin(now), z:0}
-            const mvpMatrix2 = getMvpMatrix(aspect, position2, rotation2)
+            const scale2 = {x:1, y:1, z: 1}
+            const mvpMatrix2 = getMvpMatrix(aspect, position2, rotation2, scale2)
             device.queue.writeBuffer(
                 piplineObj.buffer,
                 256, // aligned at 256-byte 

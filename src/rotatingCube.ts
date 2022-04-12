@@ -1,7 +1,7 @@
-import { mat4, vec3 } from 'gl-matrix'
 import basicVert from './shaders/basic.vert.wgsl?raw'
 import positionFrag from './shaders/position.frag.wgsl?raw'
 import * as cube from './util/cube'
+import { getMvpMatrix } from './util/math'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
@@ -110,28 +110,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
     return {pipeline, vertexBuffer, matrixBuffer, uniformGroup}
 }
 
-// create a rotation matrix
-function getMvpMatrix(
-    aspect: number,
-    positioin: {x:number, y:number, z:number},
-    rotation: {x:number, y:number, z:number}
-){
-    // create a perspective Matrix
-    const projectionMatrix = mat4.create()
-    mat4.perspective(projectionMatrix, (2 * Math.PI) / 5, aspect, 1, 100.0)
-    // create modelView Matrix
-    const viewMatrix = mat4.create()
-    // translate position
-    mat4.translate(viewMatrix, viewMatrix, vec3.fromValues(positioin.x, positioin.y, positioin.z))
-    // rotate
-    mat4.rotate(viewMatrix, viewMatrix, 1, vec3.fromValues(rotation.x, rotation.y, rotation.z))
-    // create mvp matrix
-    const modelViewProjectionMatrix = mat4.create()
-    mat4.multiply(modelViewProjectionMatrix, projectionMatrix, viewMatrix)
-    // return matrix as Float32Array
-    return modelViewProjectionMatrix as Float32Array
-}
-
 // create & submit device commands
 function draw(
     device: GPUDevice, 
@@ -195,9 +173,10 @@ async function run(){
         // first, update transform matrix
         const aspect = size.width/ size.height
         const position = {x:0, y:0, z: -4}
+        const scale = {x:1, y:1, z:1}
         const now = Date.now() / 1000
         const rotation = {x: Math.sin(now), y: Math.cos(now), z:0}
-        const mvpMatrix = getMvpMatrix(aspect, position, rotation)
+        const mvpMatrix = getMvpMatrix(aspect, position, rotation, scale)
         device.queue.writeBuffer(
             piplineObj.matrixBuffer,
             0,

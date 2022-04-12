@@ -1,7 +1,7 @@
-import { mat4, vec3 } from 'gl-matrix'
 import basicInstanced from './shaders/basic.instanced.vert.wgsl?raw'
 import positionFrag from './shaders/position.frag.wgsl?raw'
 import * as cube from './util/cube'
+import { getMvpMatrix } from './util/math'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
@@ -108,28 +108,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, NUM:num
     return {pipeline, vertexBuffer, buffer, group, NUM}
 }
 
-// create a rotation matrix
-function getMvpMatrix(
-    aspect: number,
-    positioin: {x:number, y:number, z:number},
-    rotation: {x:number, y:number, z:number}
-){
-    // create a perspective Matrix
-    const projectionMatrix = mat4.create()
-    mat4.perspective(projectionMatrix, (2 * Math.PI) / 5, aspect, 1, 100.0)
-    // create modelView Matrix
-    const viewMatrix = mat4.create()
-    // translate position
-    mat4.translate(viewMatrix, viewMatrix, vec3.fromValues(positioin.x, positioin.y, positioin.z))
-    // rotate
-    mat4.rotate(viewMatrix, viewMatrix, 1, vec3.fromValues(rotation.x, rotation.y, rotation.z))
-    // create mvp matrix
-    const modelViewProjectionMatrix = mat4.create()
-    mat4.multiply(modelViewProjectionMatrix, projectionMatrix, viewMatrix)
-    // return matrix as Float32Array
-    return modelViewProjectionMatrix as Float32Array
-}
-
 // create & submit device commands
 function draw(
     device: GPUDevice, 
@@ -199,17 +177,19 @@ async function run(){
         // craete simple object
         const position = {x: Math.random() * 20 - 10, y: Math.random() * 20 - 10, z: - 20}
         const rotation = {x: 0, y: 0, z: 0}
-        objects.push({position, rotation})
+        const scale = {x:1, y:1, z:1}
+        objects.push({position, rotation, scale})
     }
     // const allMatrix = new Float32Array(NUM * 4 * 4)
     // start loop
     function frame(){
         // update rotation for each object
         for(let i = 0; i < objects.length - 1; i++){
+            const obj = objects[i]
             const now = Date.now() / 1000
-            objects[i].rotation.x = Math.sin(now + i)
-            objects[i].rotation.y = Math.cos(now + i)
-            const mvpMatrix = getMvpMatrix(aspect, objects[i].position, objects[i].rotation)
+            obj.rotation.x = Math.sin(now + i)
+            obj.rotation.y = Math.cos(now + i)
+            const mvpMatrix = getMvpMatrix(aspect, obj.position, obj.rotation, obj.scale)
             // update buffer based on offset
             device.queue.writeBuffer(
                 piplineObj.buffer,
