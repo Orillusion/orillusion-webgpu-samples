@@ -170,7 +170,7 @@ async function run(){
     const piplineObj = await initPipeline(device, format, NUM)
     
     // create objects
-    const aspect = size.width/ size.height
+    let aspect = size.width/ size.height
     const objects:any[] = []
     for(let i = 0; i < NUM; i++)
     {
@@ -215,6 +215,7 @@ async function run(){
             device, format, size,
             compositingAlphaMode: 'opaque'
         })
+        aspect = size.width/ size.height
     })
 }
 run()

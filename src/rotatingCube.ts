@@ -168,14 +168,17 @@ async function run(){
     const {device, context, format, size} = await initWebGPU(canvas)
     const piplineObj = await initPipeline(device, format)
     
+    // default state
+    let aspect = size.width/ size.height
+    const position = {x:0, y:0, z: -4}
+    const scale = {x:1, y:1, z:1}
+    const rotation = {x: 0, y: 0, z:0}
     // start loop
     function frame(){
-        // first, update transform matrix
-        const aspect = size.width/ size.height
-        const position = {x:0, y:0, z: -4}
-        const scale = {x:1, y:1, z:1}
+        // rotate by time, and update transform matrix
         const now = Date.now() / 1000
-        const rotation = {x: Math.sin(now), y: Math.cos(now), z:0}
+        rotation.x = Math.sin(now)
+        rotation.y = Math.cos(now)
         const mvpMatrix = getMvpMatrix(aspect, position, rotation, scale)
         device.queue.writeBuffer(
             piplineObj.matrixBuffer,
@@ -196,6 +199,7 @@ async function run(){
             device, format, size,
             compositingAlphaMode: 'opaque'
         })
+        aspect = size.width/ size.height
     })
 }
 run()

@@ -186,16 +186,22 @@ async function run(){
     const {device, context, format, size} = await initWebGPU(canvas)
     const piplineObj = await initPipeline(device, format)
     
+    // defaut state
+    let aspect = size.width/ size.height
+    const position1 = {x:2, y:0, z: -7}
+    const rotation1 = {x: 0, y: 0, z:0}
+    const scale1 = {x:1, y:1, z: 1}
+    const position2 = {x:-2, y:0, z: -7}
+    const rotation2 = {x: 0, y: 0, z:0}
+    const scale2 = {x:1, y:1, z: 1}
     // start loop
     function frame(){
         // first, update two transform matrixs
-        const aspect = size.width/ size.height
         const now = Date.now() / 1000
         {
             // first cube
-            const position1 = {x:2, y:0, z: -7}
-            const rotation1 = {x: Math.sin(now), y: Math.cos(now), z:0}
-            const scale1 = {x:1, y:1, z: 1}
+            rotation1.x = Math.sin(now)
+            rotation1.y = Math.cos(now)
             const mvpMatrix1 = getMvpMatrix(aspect, position1, rotation1, scale1)
             device.queue.writeBuffer(
                 piplineObj.buffer,
@@ -205,9 +211,8 @@ async function run(){
         }
         {
             // second cube with 256-byte offset
-            const position2 = {x:-2, y:0, z: -7}
-            const rotation2 = {x: Math.cos(now), y: Math.sin(now), z:0}
-            const scale2 = {x:1, y:1, z: 1}
+            rotation2.x = Math.cos(now)
+            rotation2.y = Math.sin(now)
             const mvpMatrix2 = getMvpMatrix(aspect, position2, rotation2, scale2)
             device.queue.writeBuffer(
                 piplineObj.buffer,
@@ -228,6 +233,7 @@ async function run(){
             device, format, size,
             compositingAlphaMode: 'opaque'
         })
+        aspect = size.width/ size.height
     })
 }
 run()
