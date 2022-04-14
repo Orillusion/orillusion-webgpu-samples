@@ -112,7 +112,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, NUM:num
 function draw(
     device: GPUDevice, 
     context: GPUCanvasContext,
-    size: {width:number, height: number},
+    depthTexture: GPUTexture,
     piplineObj: {
         pipeline: GPURenderPipeline,
         vertexBuffer: GPUBuffer,
@@ -122,15 +122,10 @@ function draw(
     }
 ) {
     const commandEncoder = device.createCommandEncoder()
-    const colorView = context.getCurrentTexture().createView()
-    const depthView = device.createTexture({
-        size, format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    }).createView()
     const renderPassDescriptor: GPURenderPassDescriptor = {
         colorAttachments: [
             {
-                view: colorView,
+                view: context.getCurrentTexture().createView(),
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
                 loadOp: 'clear',
                 storeOp: 'store',
@@ -139,7 +134,7 @@ function draw(
             }
         ],
         depthStencilAttachment: {
-            view: depthView,
+            view: depthTexture.createView(),
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
@@ -168,7 +163,11 @@ async function run(){
     const NUM = 10
     const {device, context, format, size} = await initWebGPU(canvas)
     const piplineObj = await initPipeline(device, format, NUM)
-    
+    // create depthTexture for renderPass
+    const depthTexture = device.createTexture({
+        size, format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
     // create objects
     let aspect = size.width/ size.height
     const objects:any[] = []
@@ -202,7 +201,7 @@ async function run(){
         // the better way is update buffer in one write after loop
         // device.queue.writeBuffer(piplineObj.buffer, 0, allMatrix)
 
-        draw(device, context, size, piplineObj)
+        draw(device, context, depthTexture, piplineObj)
         requestAnimationFrame(frame)
     }
     frame()

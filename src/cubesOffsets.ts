@@ -127,7 +127,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
 function draw(
     device: GPUDevice, 
     context: GPUCanvasContext,
-    size: {width:number, height: number},
+    depthTexture: GPUTexture,
     piplineObj: {
         pipeline: GPURenderPipeline,
         vertexBuffer: GPUBuffer,
@@ -138,15 +138,10 @@ function draw(
 ) {
     // start encoder
     const commandEncoder = device.createCommandEncoder()
-    const colorView = context.getCurrentTexture().createView()
-    const depthView = device.createTexture({
-        size, format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    }).createView()
     const renderPassDescriptor: GPURenderPassDescriptor = {
         colorAttachments: [
             {
-                view: colorView,
+                view: context.getCurrentTexture().createView(),
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
                 loadOp: 'clear',
                 storeOp: 'store',
@@ -155,7 +150,7 @@ function draw(
             }
         ],
         depthStencilAttachment: {
-            view: depthView,
+            view: depthTexture.createView(),
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
@@ -185,7 +180,11 @@ async function run(){
         throw new Error('No Canvas')
     const {device, context, format, size} = await initWebGPU(canvas)
     const piplineObj = await initPipeline(device, format)
-    
+    // create depthTexture for renderPass
+    const depthTexture = device.createTexture({
+        size, format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
     // defaut state
     let aspect = size.width/ size.height
     const position1 = {x:2, y:0, z: -7}
@@ -220,7 +219,7 @@ async function run(){
                 mvpMatrix2.buffer
             )
         }
-        draw(device, context, size, piplineObj)
+        draw(device, context, depthTexture, piplineObj)
         requestAnimationFrame(frame)
     }
     frame()
