@@ -27,7 +27,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
 }
 
 // create pipiline & buffers
-async function initPipeline(device: GPUDevice, format: GPUTextureFormat, NUM:number) {
+async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{width:number, height:number}, NUM:number) {
     const pipeline = await device.createRenderPipelineAsync({
         label: 'Basic Pipline',
         vertex: {
@@ -104,20 +104,25 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, NUM:num
             }
         ]
     })
+    // create depthTexture for renderPass
+    const depthTexture = device.createTexture({
+        size, format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
     // return all vars
-    return {pipeline, vertexBuffer, buffer, group, NUM}
+    return {pipeline, vertexBuffer, buffer, group, depthTexture, NUM}
 }
 
 // create & submit device commands
 function draw(
     device: GPUDevice, 
     context: GPUCanvasContext,
-    depthTexture: GPUTexture,
     piplineObj: {
         pipeline: GPURenderPipeline,
         vertexBuffer: GPUBuffer,
         buffer: GPUBuffer,
         group: GPUBindGroup,
+        depthTexture: GPUTexture,
         NUM: number
     }
 ) {
@@ -134,7 +139,7 @@ function draw(
             }
         ],
         depthStencilAttachment: {
-            view: depthTexture.createView(),
+            view: piplineObj.depthTexture.createView(),
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
@@ -162,12 +167,7 @@ async function run(){
     
     const NUM = 10
     const {device, context, format, size} = await initWebGPU(canvas)
-    const piplineObj = await initPipeline(device, format, NUM)
-    // create depthTexture for renderPass
-    const depthTexture = device.createTexture({
-        size, format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    })
+    const piplineObj = await initPipeline(device, format, size, NUM)
     // create objects
     let aspect = size.width/ size.height
     const objects:any[] = []
@@ -201,7 +201,7 @@ async function run(){
         // the better way is update buffer in one write after loop
         // device.queue.writeBuffer(piplineObj.buffer, 0, allMatrix)
 
-        draw(device, context, depthTexture, piplineObj)
+        draw(device, context, piplineObj)
         requestAnimationFrame(frame)
     }
     frame()
@@ -210,10 +210,18 @@ async function run(){
     window.addEventListener('resize', ()=>{
         size.width = canvas.clientWidth * devicePixelRatio
         size.height = canvas.clientHeight * devicePixelRatio
+        // reconfigure canvas
         context.configure({
             device, format, size,
             compositingAlphaMode: 'opaque'
         })
+        // re-create depth texture
+        piplineObj.depthTexture.destroy()
+        piplineObj.depthTexture = device.createTexture({
+            size, format: 'depth24plus',
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        })
+        // update aspect
         aspect = size.width/ size.height
     })
 }
