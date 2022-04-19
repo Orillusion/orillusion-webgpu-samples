@@ -205,7 +205,7 @@ async function run(){
             device.queue.writeBuffer(
                 piplineObj.buffer,
                 0,
-                mvpMatrix1.buffer
+                mvpMatrix1
             )
         }
         {
@@ -216,7 +216,7 @@ async function run(){
             device.queue.writeBuffer(
                 piplineObj.buffer,
                 256, // aligned at 256-byte 
-                mvpMatrix2.buffer
+                mvpMatrix2
             )
         }
         draw(device, context, piplineObj)

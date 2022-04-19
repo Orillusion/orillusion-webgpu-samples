@@ -67,7 +67,8 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
         primitive: {
             topology: 'triangle-list',
             // Culling backfaces pointing away from the camera
-            cullMode: 'back'
+            cullMode: 'back',
+            frontFace: 'ccw'
         },
         // Enable depth testing since we have z-level positions
         // Fragment closest to the camera is rendered in front
