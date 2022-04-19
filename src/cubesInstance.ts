@@ -165,16 +165,15 @@ async function run(){
     if (!canvas)
         throw new Error('No Canvas')
     
-    const NUM = 10
+    const NUM = 100
     const {device, context, format, size} = await initWebGPU(canvas)
     const piplineObj = await initPipeline(device, format, size, NUM)
     // create objects
     let aspect = size.width/ size.height
     const objects:any[] = []
-    for(let i = 0; i < NUM; i++)
-    {
+    for(let i = 0; i < NUM; i++){
         // craete simple object
-        const position = {x: Math.random() * 20 - 10, y: Math.random() * 20 - 10, z: - 20}
+        const position = {x: Math.random() * 30 - 15, y: Math.random() * 30 - 15, z: Math.random() * 15 - 30}
         const rotation = {x: 0, y: 0, z: 0}
         const scale = {x:1, y:1, z:1}
         objects.push({position, rotation, scale})
