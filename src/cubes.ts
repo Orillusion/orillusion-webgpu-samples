@@ -193,7 +193,7 @@ async function run(){
     if (!canvas)
         throw new Error('No Canvas')
     const {device, context, format, size} = await initWebGPU(canvas)
-    const piplineObj = await initPipeline(device, format, size)
+    const pipelineObj = await initPipeline(device, format, size)
     // defaut state
     let aspect = size.width/ size.height
     const position1 = {x:2, y:0, z: -7}
@@ -212,7 +212,7 @@ async function run(){
             rotation1.y = Math.cos(now)
             const mvpMatrix1 = getMvpMatrix(aspect, position1, rotation1, scale1)
             device.queue.writeBuffer(
-                piplineObj.buffer1,
+                pipelineObj.buffer1,
                 0,
                 mvpMatrix1
             )
@@ -223,13 +223,13 @@ async function run(){
             rotation2.y = Math.sin(now)
             const mvpMatrix2 = getMvpMatrix(aspect, position2, rotation2, scale2)
             device.queue.writeBuffer(
-                piplineObj.buffer2,
+                pipelineObj.buffer2,
                 0,
                 mvpMatrix2
             )
         }
         // then draw
-        draw(device, context, piplineObj)
+        draw(device, context, pipelineObj)
         requestAnimationFrame(frame)
     }
     frame()
@@ -244,8 +244,8 @@ async function run(){
             compositingAlphaMode: 'opaque'
         })
         // re-create depth texture
-        piplineObj.depthTexture.destroy()
-        piplineObj.depthTexture = device.createTexture({
+        pipelineObj.depthTexture.destroy()
+        pipelineObj.depthTexture = device.createTexture({
             size, format: 'depth24plus',
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
         })

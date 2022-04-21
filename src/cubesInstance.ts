@@ -167,7 +167,7 @@ async function run(){
     
     const NUM = 100
     const {device, context, format, size} = await initWebGPU(canvas)
-    const piplineObj = await initPipeline(device, format, size, NUM)
+    const pipelineObj = await initPipeline(device, format, size, NUM)
     // create objects
     let aspect = size.width/ size.height
     const objects:any[] = []
@@ -190,7 +190,7 @@ async function run(){
             const mvpMatrix = getMvpMatrix(aspect, obj.position, obj.rotation, obj.scale)
             // update buffer based on offset
             device.queue.writeBuffer(
-                piplineObj.buffer,
+                pipelineObj.buffer,
                 i * 4 * 4 * 4, // offset for each object, no need to 256-byte aligned
                 mvpMatrix
             )
@@ -200,7 +200,7 @@ async function run(){
         // the better way is update buffer in one write after loop
         // device.queue.writeBuffer(piplineObj.buffer, 0, allMatrix)
 
-        draw(device, context, piplineObj)
+        draw(device, context, pipelineObj)
         requestAnimationFrame(frame)
     }
     frame()
@@ -215,8 +215,8 @@ async function run(){
             compositingAlphaMode: 'opaque'
         })
         // re-create depth texture
-        piplineObj.depthTexture.destroy()
-        piplineObj.depthTexture = device.createTexture({
+        pipelineObj.depthTexture.destroy()
+        pipelineObj.depthTexture = device.createTexture({
             size, format: 'depth24plus',
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
         })
