@@ -132,7 +132,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
 function draw(
     device: GPUDevice, 
     context: GPUCanvasContext,
-    piplineObj: {
+    pipelineObj: {
         pipeline: GPURenderPipeline,
         vertexBuffer: GPUBuffer,
         buffer: GPUBuffer,
@@ -155,22 +155,22 @@ function draw(
             }
         ],
         depthStencilAttachment: {
-            view: piplineObj.depthTexture.createView(),
+            view: pipelineObj.depthTexture.createView(),
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
         }
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-    passEncoder.setPipeline(piplineObj.pipeline)
+    passEncoder.setPipeline(pipelineObj.pipeline)
     // set vertex
-    passEncoder.setVertexBuffer(0, piplineObj.vertexBuffer)
+    passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
     {
         // draw first cube
-        passEncoder.setBindGroup(0, piplineObj.group1)
+        passEncoder.setBindGroup(0, pipelineObj.group1)
         passEncoder.draw(cube.vertexCount)
         // draw second cube
-        passEncoder.setBindGroup(0, piplineObj.group2)
+        passEncoder.setBindGroup(0, pipelineObj.group2)
         passEncoder.draw(cube.vertexCount)
     }
     // endPass is deprecated after v101

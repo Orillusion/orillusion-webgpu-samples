@@ -117,7 +117,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
 function draw(
     device: GPUDevice, 
     context: GPUCanvasContext,
-    piplineObj: {
+    pipelineObj: {
         pipeline: GPURenderPipeline,
         vertexBuffer: GPUBuffer,
         buffer: GPUBuffer,
@@ -139,20 +139,20 @@ function draw(
             }
         ],
         depthStencilAttachment: {
-            view: piplineObj.depthTexture.createView(),
+            view: pipelineObj.depthTexture.createView(),
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
         }
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-    passEncoder.setPipeline(piplineObj.pipeline)
+    passEncoder.setPipeline(pipelineObj.pipeline)
     // set vertex
-    passEncoder.setVertexBuffer(0, piplineObj.vertexBuffer)
+    passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
     {
         // draw two cubes in one call
-        passEncoder.setBindGroup(0, piplineObj.group)
-        passEncoder.draw(cube.vertexCount, piplineObj.NUM)
+        passEncoder.setBindGroup(0, pipelineObj.group)
+        passEncoder.draw(cube.vertexCount, pipelineObj.NUM)
     }
     // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
@@ -198,7 +198,7 @@ async function run(){
             // allMatrix.set(mvpMatrix, i * 4 * 4)
         }
         // the better way is update buffer in one write after loop
-        // device.queue.writeBuffer(piplineObj.buffer, 0, allMatrix)
+        // device.queue.writeBuffer(pipelineObj.buffer, 0, allMatrix)
 
         draw(device, context, pipelineObj)
         requestAnimationFrame(frame)

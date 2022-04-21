@@ -117,7 +117,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
 function draw(
     device: GPUDevice, 
     context: GPUCanvasContext,
-    piplineObj: {
+    pipelineObj: {
         pipeline: GPURenderPipeline
         vertexBuffer: GPUBuffer
         matrixBuffer: GPUBuffer
@@ -139,18 +139,18 @@ function draw(
             }
         ],
         depthStencilAttachment: {
-            view: piplineObj.depthTexture.createView(),
+            view: pipelineObj.depthTexture.createView(),
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
         }
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-    passEncoder.setPipeline(piplineObj.pipeline)
+    passEncoder.setPipeline(pipelineObj.pipeline)
     // set uniformGroup
-    passEncoder.setBindGroup(0, piplineObj.uniformGroup)
+    passEncoder.setBindGroup(0, pipelineObj.uniformGroup)
     // set vertex
-    passEncoder.setVertexBuffer(0, piplineObj.vertexBuffer)
+    passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
     // draw vertex count of cube
     passEncoder.draw(cube.vertexCount)
     // endPass is deprecated after v101
@@ -164,7 +164,7 @@ async function run(){
     if (!canvas)
         throw new Error('No Canvas')
     const {device, context, format, size} = await initWebGPU(canvas)
-    const piplineObj = await initPipeline(device, format, size)
+    const pipelineObj = await initPipeline(device, format, size)
     // default state
     let aspect = size.width/ size.height
     const position = {x:0, y:0, z: -4}
@@ -178,12 +178,12 @@ async function run(){
         rotation.y = Math.cos(now)
         const mvpMatrix = getMvpMatrix(aspect, position, rotation, scale)
         device.queue.writeBuffer(
-            piplineObj.matrixBuffer,
+            pipelineObj.matrixBuffer,
             0,
             mvpMatrix.buffer
         )
         // then draw
-        draw(device, context, piplineObj)
+        draw(device, context, pipelineObj)
         requestAnimationFrame(frame)
     }
     frame()
@@ -198,8 +198,8 @@ async function run(){
             compositingAlphaMode: 'opaque'
         })
         // re-create depth texture
-        piplineObj.depthTexture.destroy()
-        piplineObj.depthTexture = device.createTexture({
+        pipelineObj.depthTexture.destroy()
+        pipelineObj.depthTexture = device.createTexture({
             size, format: 'depth24plus',
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
         })
