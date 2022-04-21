@@ -74,11 +74,8 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
         label: 'GPUBuffer store rgba color',
         size: 4 * 4, // 4 * float32
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-        mappedAtCreation: true
     })
-    // device.queue.writeBuffer(colorBuffer, 0, new Float32Array([1,1,0,1]))
-    new Float32Array(colorBuffer.getMappedRange()).set(new Float32Array([1,1,0,1]))
-    colorBuffer.unmap()
+    device.queue.writeBuffer(colorBuffer, 0, new Float32Array([1,1,0,1]))
     
     // create a uniform group for color
     const uniformGroup = device.createBindGroup({
@@ -98,7 +95,12 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat) {
 }
 
 // create & submit device commands
-function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderPipeline, uniformGroup: GPUBindGroup, vertexBuffer: GPUBuffer) {
+function draw(device: GPUDevice, context: GPUCanvasContext, pipelineObj: {
+    pipeline: GPURenderPipeline,
+    vertexBuffer: GPUBuffer,
+    colorBuffer: GPUBuffer,
+    uniformGroup: GPUBindGroup
+}) {
     const commandEncoder = device.createCommandEncoder()
     const view = context.getCurrentTexture().createView()
     const renderPassDescriptor: GPURenderPassDescriptor = {
@@ -114,11 +116,11 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
         ]
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-    passEncoder.setPipeline(pipeline)
+    passEncoder.setPipeline(pipelineObj.pipeline)
     // set uniformGroup
-    passEncoder.setBindGroup(0, uniformGroup)
+    passEncoder.setBindGroup(0, pipelineObj.uniformGroup)
     // set vertex
-    passEncoder.setVertexBuffer(0, vertexBuffer)
+    passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
     // 3 vertex form a triangle
     passEncoder.draw(triangle.vertexCount)
     // endPass is deprecated after v101
@@ -132,14 +134,10 @@ async function run(){
     if (!canvas)
         throw new Error('No Canvas')
     const {device, context, format} = await initWebGPU(canvas)
-    const {pipeline, uniformGroup, colorBuffer, vertexBuffer} = await initPipeline(device, format)
+    const pipelineObj = await initPipeline(device, format)
     
-    // start render loop
-    function frame(){
-        draw(device, context, pipeline, uniformGroup, vertexBuffer)
-        requestAnimationFrame(frame)
-    }
-    frame()
+    // first draw
+    draw(device, context, pipelineObj)
 
     // update colorBuffer if color changed
     document.querySelector('input[type="color"]')?.addEventListener('input', (e:Event) => {
@@ -151,7 +149,8 @@ async function run(){
         const g = +('0x' + color.slice(3, 5)) / 255
         const b = +('0x' + color.slice(5, 7)) / 255
         // write colorBuffer with new color
-        device.queue.writeBuffer(colorBuffer, 0, new Float32Array([r, g, b, 1]))
+        device.queue.writeBuffer(pipelineObj.colorBuffer, 0, new Float32Array([r, g, b, 1]))
+        draw(device, context, pipelineObj)
     })
     // update vertexBuffer
     document.querySelector('input[type="range"]')?.addEventListener('input', (e:Event) => {
@@ -163,7 +162,8 @@ async function run(){
         triangle.vertex[3] = -0.5 + value
         triangle.vertex[6] = 0.5 + value
         // write vertexBuffer with new vertex
-        device.queue.writeBuffer(vertexBuffer, 0, triangle.vertex)
+        device.queue.writeBuffer(pipelineObj.vertexBuffer, 0, triangle.vertex)
+        draw(device, context, pipelineObj)
     })
     // re-configure context on resize
     window.addEventListener('resize', ()=>{
@@ -175,6 +175,7 @@ async function run(){
             },
             compositingAlphaMode: 'opaque'
         })
+        draw(device, context, pipelineObj)
     })
 }
 run()
