@@ -122,18 +122,12 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
             }
         ]
     })
-    // create a (256 + 4 * 16) matrix3
-    const buffer3 = device.createBuffer({
-        label: 'GPUBuffer store 2 4*4 matrix',
-        size: 256 + 4 * 16, // 2 matrix with 256-byte aligned
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    })
     const depthTexture = device.createTexture({
         size, format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
     // return all vars
-    return {pipeline, depthTexture, vertexBuffer, buffer1, buffer2, buffer3, group1, group2}
+    return {pipeline, depthTexture, vertexBuffer, buffer1, buffer2, group1, group2}
 }
 
 // create & submit device commands
