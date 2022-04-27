@@ -165,6 +165,7 @@ function draw(
     passEncoder.setPipeline(pipelineObj.pipeline)
     // set vertex
     passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
+    // for(let i = 0; i < 200000; i++)
     {
         // draw first cube
         passEncoder.setBindGroup(0, pipelineObj.group1)

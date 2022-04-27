@@ -171,6 +171,7 @@ function draw(
     passEncoder.setPipeline(pipelineObj.pipeline)
     // set vertex
     passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
+    // for(let i = 0; i < 200000; i++)
     {
         // draw first cube with dynamicOffset 0
         passEncoder.setBindGroup(0, pipelineObj.group, [0])

@@ -170,20 +170,20 @@ async function run(){
     const pipelineObj = await initPipeline(device, format, size, NUM)
     // create objects
     let aspect = size.width/ size.height
-    const objects:any[] = []
+    const scene:any[] = []
     for(let i = 0; i < NUM; i++){
         // craete simple object
-        const position = {x: Math.random() * 30 - 15, y: Math.random() * 30 - 15, z: Math.random() * 15 - 30}
+        const position = {x: Math.random() * 30 - 15, y: Math.random() * 30 - 15, z: Math.random() * 30 - 60}
         const rotation = {x: 0, y: 0, z: 0}
         const scale = {x:1, y:1, z:1}
-        objects.push({position, rotation, scale})
+        scene.push({position, rotation, scale})
     }
     // const allMatrix = new Float32Array(NUM * 4 * 4)
     // start loop
     function frame(){
         // update rotation for each object
-        for(let i = 0; i < objects.length - 1; i++){
-            const obj = objects[i]
+        for(let i = 0; i < scene.length - 1; i++){
+            const obj = scene[i]
             const now = Date.now() / 1000
             obj.rotation.x = Math.sin(now + i)
             obj.rotation.y = Math.cos(now + i)

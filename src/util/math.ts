@@ -1,6 +1,6 @@
 import { mat4, vec3 } from 'gl-matrix'
 
-const fov:number = Math.PI / 2
+const fov:number = 50 / 180 * Math.PI
 const near:number = 0.1
 const far:number = 100.0
 // return mvp matrix from given aspect, position, rotation, scale
