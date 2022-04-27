@@ -77,6 +77,12 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
             format: 'depth24plus',
         }
     } as GPURenderPipelineDescriptor)
+    // create depthTexture for renderPass
+    const depthTexture = device.createTexture({
+        size, format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
+
     // create vertex buffer
     const vertexBuffer = device.createBuffer({
         label: 'GPUBuffer store vertex',
@@ -84,7 +90,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     })
     device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
-    
     // create a 4x4xCount STORAGE buffer to store matrix
     const buffer = device.createBuffer({
         label: 'GPUBuffer store n*4x4 matrix',
@@ -103,11 +108,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
                 }
             }
         ]
-    })
-    // create depthTexture for renderPass
-    const depthTexture = device.createTexture({
-        size, format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
     // return all vars
     return {pipeline, vertexBuffer, buffer, group, depthTexture, NUM}

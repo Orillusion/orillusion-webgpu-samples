@@ -77,6 +77,12 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
             format: 'depth24plus',
         }
     } as GPURenderPipelineDescriptor)
+    // create depthTexture for renderPass
+    const depthTexture = device.createTexture({
+        size, format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
+
     // create vertex buffer
     const vertexBuffer = device.createBuffer({
         label: 'GPUBuffer store vertex',
@@ -85,10 +91,10 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     })
     device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
 
-    // create a (256 + 4 * 16) matrix3
+    // create a buffer for 2 matrix
     const buffer = device.createBuffer({
         label: 'GPUBuffer store 2 4*4 matrix',
-        size: 256 + 4 * 16, // 2 matrix with 256-byte aligned
+        size: 256 * 2, // 2 matrix with 256-byte aligned, or 256 + 64
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     })
     //create two groups with different offset for matrix3
@@ -118,11 +124,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
                 }
             }
         ]
-    })
-    // create depthTexture for renderPass
-    const depthTexture = device.createTexture({
-        size, format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
     // return all vars
     return {pipeline, vertexBuffer, buffer, group1, group2, depthTexture}
@@ -188,10 +189,10 @@ async function run(){
     const pipelineObj = await initPipeline(device, format, size)
     // defaut state
     let aspect = size.width/ size.height
-    const position1 = {x:2, y:0, z: -7}
+    const position1 = {x:2, y:0, z: -8}
     const rotation1 = {x: 0, y: 0, z:0}
     const scale1 = {x:1, y:1, z: 1}
-    const position2 = {x:-2, y:0, z: -7}
+    const position2 = {x:-2, y:0, z: -8}
     const rotation2 = {x: 0, y: 0, z:0}
     const scale2 = {x:1, y:1, z: 1}
     // start loop

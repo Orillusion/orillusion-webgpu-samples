@@ -78,6 +78,11 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
             format: 'depth24plus',
         }
     } as GPURenderPipelineDescriptor)
+    // create depthTexture for renderPass
+    const depthTexture = device.createTexture({
+        size, format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
     // create vertex buffer
     const vertexBuffer = device.createBuffer({
         label: 'GPUBuffer store vertex',
@@ -103,11 +108,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
                 }
             }
         ]
-    })
-    // create depthTexture for renderPass
-    const depthTexture = device.createTexture({
-        size, format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
     // return all vars
     return {pipeline, vertexBuffer, matrixBuffer, uniformGroup, depthTexture}
@@ -167,7 +167,7 @@ async function run(){
     const pipelineObj = await initPipeline(device, format, size)
     // default state
     let aspect = size.width/ size.height
-    const position = {x:0, y:0, z: -4}
+    const position = {x:0, y:0, z: -5}
     const scale = {x:1, y:1, z:1}
     const rotation = {x: 0, y: 0, z:0}
     // start loop

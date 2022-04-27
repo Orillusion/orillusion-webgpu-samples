@@ -87,6 +87,11 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
             format: 'depth24plus',
         }
     } as GPURenderPipelineDescriptor)
+    // create depthTexture for renderPass
+    const depthTexture = device.createTexture({
+        size, format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
     // create vertex buffer
     const vertexBuffer = device.createBuffer({
         label: 'GPUBuffer store vertex',
@@ -99,11 +104,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
         label: 'GPUBuffer store 4x4 matrix',
         size: 4 * 4 * 4, // 4 x 4 x float32
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    })
-    // create depthTexture for renderPass
-    const depthTexture = device.createTexture({
-        size, format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
     // Create a sampler with linear filtering for smooth interpolation.
     const sampler = device.createSampler({
@@ -147,16 +147,17 @@ function draw(
 ) {
     // external texture will be auto destroyed as soon as js returns to browser 
     // so need to re-load external video every frame
-    // also need to re-create a bindGroup for external texture
     // cannot be interrupt by await before renderring
+    const texture = device.importExternalTexture({
+        source: video
+    })
+    // also need to re-create a bindGroup for external texture
     const videoGroup = device.createBindGroup({
         layout: pipelineObj.pipeline.getBindGroupLayout(1),
         entries: [
             {
                 binding: 0,
-                resource: device.importExternalTexture({
-                    source: video
-                })
+                resource: texture
             }
         ]
     })
@@ -203,7 +204,7 @@ async function run() {
     const pipelineObj = await initPipeline(device, format, size)
     // default state
     let aspect = size.width / size.height
-    const position = { x: 0, y: 0, z: -4 }
+    const position = { x: 0, y: 0, z: -5 }
     const scale = { x: 1, y: 1, z: 1 }
     const rotation = { x: 0, y: 0, z: 0 }
     // start loop
