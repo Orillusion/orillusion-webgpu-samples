@@ -90,10 +90,10 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     })
     device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
-    // create a 4x4xCount STORAGE buffer to store matrix
-    const buffer = device.createBuffer({
+    // create a 4x4xNUM STORAGE buffer to store matrix
+    const mvp = device.createBuffer({
         label: 'GPUBuffer store n*4x4 matrix',
-        size: 4 * 4 * 4 * NUM, // 4 x 4 x float32 x Object Count
+        size: 4 * 4 * 4 * NUM, // 4 x 4 x float32 x NUM
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
     // create a uniform group for Matrix
@@ -104,13 +104,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
             {
                 binding: 0,
                 resource: {
-                    buffer: buffer
+                    buffer: mvp
                 }
             }
         ]
     })
     // return all vars
-    return {pipeline, vertexBuffer, buffer, group, depthTexture, NUM}
+    return {pipeline, vertexBuffer, mvp, group, depthTexture, NUM}
 }
 
 // create & submit device commands
@@ -120,7 +120,7 @@ function draw(
     pipelineObj: {
         pipeline: GPURenderPipeline,
         vertexBuffer: GPUBuffer,
-        buffer: GPUBuffer,
+        mvp: GPUBuffer,
         group: GPUBindGroup,
         depthTexture: GPUTexture,
         NUM: number
@@ -190,7 +190,7 @@ async function run(){
             const mvpMatrix = getMvpMatrix(aspect, obj.position, obj.rotation, obj.scale)
             // update buffer based on offset
             device.queue.writeBuffer(
-                pipelineObj.buffer,
+                pipelineObj.mvp,
                 i * 4 * 4 * 4, // offset for each object, no need to 256-byte aligned
                 mvpMatrix
             )
