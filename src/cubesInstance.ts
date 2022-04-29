@@ -3,6 +3,9 @@ import positionFrag from './shaders/position.frag.wgsl?raw'
 import * as cube from './util/cube'
 import { getMvpMatrix } from './util/math'
 
+// total objects
+const NUM = 100
+
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
     if(!navigator.gpu)
@@ -27,7 +30,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
 }
 
 // create pipiline & buffers
-async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{width:number, height:number}, NUM:number) {
+async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{width:number, height:number}) {
     const pipeline = await device.createRenderPipelineAsync({
         label: 'Basic Pipline',
         vertex: {
@@ -91,7 +94,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     })
     device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
     // create a 4x4xNUM STORAGE buffer to store matrix
-    const mvp = device.createBuffer({
+    const mvpBuffer = device.createBuffer({
         label: 'GPUBuffer store n*4x4 matrix',
         size: 4 * 4 * 4 * NUM, // 4 x 4 x float32 x NUM
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
@@ -104,13 +107,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
             {
                 binding: 0,
                 resource: {
-                    buffer: mvp
+                    buffer: mvpBuffer
                 }
             }
         ]
     })
     // return all vars
-    return {pipeline, vertexBuffer, mvp, group, depthTexture, NUM}
+    return {pipeline, vertexBuffer, mvpBuffer, group, depthTexture}
 }
 
 // create & submit device commands
@@ -120,10 +123,9 @@ function draw(
     pipelineObj: {
         pipeline: GPURenderPipeline,
         vertexBuffer: GPUBuffer,
-        mvp: GPUBuffer,
+        mvpBuffer: GPUBuffer,
         group: GPUBindGroup,
-        depthTexture: GPUTexture,
-        NUM: number
+        depthTexture: GPUTexture
     }
 ) {
     const commandEncoder = device.createCommandEncoder()
@@ -152,7 +154,7 @@ function draw(
     {
         // draw two cubes in one call
         passEncoder.setBindGroup(0, pipelineObj.group)
-        passEncoder.draw(cube.vertexCount, pipelineObj.NUM)
+        passEncoder.draw(cube.vertexCount, NUM)
     }
     // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
@@ -165,9 +167,8 @@ async function run(){
     if (!canvas)
         throw new Error('No Canvas')
     
-    const NUM = 100
     const {device, context, format, size} = await initWebGPU(canvas)
-    const pipelineObj = await initPipeline(device, format, size, NUM)
+    const pipelineObj = await initPipeline(device, format, size)
     // create objects
     let aspect = size.width/ size.height
     const scene:any[] = []
@@ -190,7 +191,7 @@ async function run(){
             const mvpMatrix = getMvpMatrix(aspect, obj.position, obj.rotation, obj.scale)
             // update buffer based on offset
             device.queue.writeBuffer(
-                pipelineObj.mvp,
+                pipelineObj.mvpBuffer,
                 i * 4 * 4 * 4, // offset for each object, no need to 256-byte aligned
                 mvpMatrix
             )

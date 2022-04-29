@@ -90,7 +90,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     })
     device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
     // create a 4x4 mvp matrix1
-    const mvp1 = device.createBuffer({
+    const mvpBuffer1 = device.createBuffer({
         label: 'GPUBuffer store 4x4 matrix1',
         size: 4 * 4 * 4, // 4 x 4 x float32
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -103,13 +103,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
             {
                 binding: 0,
                 resource: {
-                    buffer: mvp1
+                    buffer: mvpBuffer1
                 }
             }
         ]
     })
     // create a 4x4 mvp matrix2
-    const mvp2 = device.createBuffer({
+    const mvpBuffer2 = device.createBuffer({
         label: 'GPUBuffer store 4x4 matrix2',
         size: 4 * 4 * 4, // 4 x 4 x float32
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -122,13 +122,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
             {
                 binding: 0,
                 resource: {
-                    buffer: mvp2
+                    buffer: mvpBuffer2
                 }
             }
         ]
     })
     // return all vars
-    return {pipeline, depthTexture, vertexBuffer, mvp1, mvp2, group1, group2}
+    return {pipeline, depthTexture, vertexBuffer, mvpBuffer1, mvpBuffer2, group1, group2}
 }
 
 // create & submit device commands
@@ -138,8 +138,8 @@ function draw(
     pipelineObj: {
         pipeline: GPURenderPipeline,
         vertexBuffer: GPUBuffer,
-        mvp1: GPUBuffer,
-        mvp2: GPUBuffer,
+        mvpBuffer1: GPUBuffer,
+        mvpBuffer2: GPUBuffer,
         group1: GPUBindGroup,
         group2: GPUBindGroup,
         depthTexture: GPUTexture
@@ -207,7 +207,7 @@ async function run(){
             rotation1.y = Math.cos(now)
             const mvpMatrix1 = getMvpMatrix(aspect, position1, rotation1, scale1)
             device.queue.writeBuffer(
-                pipelineObj.mvp1,
+                pipelineObj.mvpBuffer1,
                 0,
                 mvpMatrix1
             )
@@ -218,7 +218,7 @@ async function run(){
             rotation2.y = Math.sin(now)
             const mvpMatrix2 = getMvpMatrix(aspect, position2, rotation2, scale2)
             device.queue.writeBuffer(
-                pipelineObj.mvp2,
+                pipelineObj.mvpBuffer2,
                 0,
                 mvpMatrix2
             )
