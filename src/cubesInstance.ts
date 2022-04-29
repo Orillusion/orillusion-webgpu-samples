@@ -152,7 +152,7 @@ function draw(
     // set vertex
     passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
     {
-        // draw two cubes in one call
+        // draw NUM cubes in one draw()
         passEncoder.setBindGroup(0, pipelineObj.group)
         passEncoder.draw(cube.vertexCount, NUM)
     }
