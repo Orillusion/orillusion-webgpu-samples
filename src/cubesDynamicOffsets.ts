@@ -123,7 +123,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
                 binding: 0,
                 resource: {
                     buffer: mvpBuffer,
-                    offset: 0,
                     size: 4 * 16
                 }
             }
