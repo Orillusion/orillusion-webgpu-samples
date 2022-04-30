@@ -199,7 +199,7 @@ async function run(){
             // allMatrix.set(mvpMatrix, i * 4 * 4)
         }
         // the better way is update buffer in one write after loop
-        // device.queue.writeBuffer(pipelineObj.buffer, 0, allMatrix)
+        // device.queue.writeBuffer(pipelineObj.mvpBuffer, 0, allMatrix)
 
         draw(device, context, pipelineObj)
         requestAnimationFrame(frame)
