@@ -147,10 +147,10 @@ function draw(
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     passEncoder.setPipeline(pipelineObj.pipeline)
-    // set uniformGroup
-    passEncoder.setBindGroup(0, pipelineObj.uniformGroup)
     // set vertex
     passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
+    // set uniformGroup
+    passEncoder.setBindGroup(0, pipelineObj.uniformGroup)
     // draw vertex count of cube
     passEncoder.draw(cube.vertexCount)
     // endPass is deprecated after v101
