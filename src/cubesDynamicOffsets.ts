@@ -168,14 +168,17 @@ function draw(
     passEncoder.setPipeline(pipelineObj.pipeline)
     // set vertex
     passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
+    const offset = new Uint32Array([0, 256])
+    for(let i = 0; i < 200000; i++)
     {
         // draw first cube with dynamicOffset 0
-        passEncoder.setBindGroup(0, pipelineObj.group, [0])
-        passEncoder.draw(cube.vertexCount)
+        passEncoder.setBindGroup(0, pipelineObj.group, offset, 0, 1)
+        //passEncoder.draw(cube.vertexCount)
         // draw second cube with dynamicOffset 256
-        passEncoder.setBindGroup(0, pipelineObj.group, [256])
-        passEncoder.draw(cube.vertexCount)
+        passEncoder.setBindGroup(0, pipelineObj.group, offset, 1, 1)
+        //passEncoder.draw(cube.vertexCount)
     }
+    passEncoder.draw(cube.vertexCount)
     // endPass is deprecated after v101
     passEncoder.end ? passEncoder.end() : passEncoder.endPass()
     // webgpu run in a separate process, all the commands will be executed after submit
