@@ -145,9 +145,10 @@ function draw(
         depthTexture: GPUTexture
     }
 ) {
-    // external texture will be auto destroyed as soon as js returns to browser 
-    // so need to re-load external video every frame
-    // cannot be interrupt by await before renderring
+    // external texture will be automatically destroyed as soon as JS returns
+    // cannot be interrupt by any async functions before renderring
+    // e.g. event callbacks, or await functions
+    // so need to re-load external video every frame 
     const texture = device.importExternalTexture({
         source: video
     })
