@@ -63,9 +63,7 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
                 view: view,
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
                 loadOp: 'clear', // clear/load
-                storeOp: 'store', // store/discard
-                // before v101
-                loadValue: { r: 0, g: 0, b: 0, a: 1.0 }
+                storeOp: 'store' // store/discard
             }
         ]
     }
@@ -73,8 +71,7 @@ function draw(device: GPUDevice, context: GPUCanvasContext, pipeline: GPURenderP
     passEncoder.setPipeline(pipeline)
     // 3 vertex form a triangle
     passEncoder.draw(3)
-    // endPass is deprecated after v101
-    passEncoder.end ? passEncoder.end() : passEncoder.endPass()
+    passEncoder.end()
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])
 }

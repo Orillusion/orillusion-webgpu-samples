@@ -2,7 +2,6 @@ import basicVert from './shaders/basic.vert.wgsl?raw'
 import sampleTexture from './shaders/sampleTexture.frag.wgsl?raw'
 import * as cube from './util/cube'
 import { getMvpMatrix } from './util/math'
-import textureUrl from '/texture.png?url'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
@@ -158,9 +157,7 @@ function draw(
                 view: context.getCurrentTexture().createView(),
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
                 loadOp: 'clear',
-                storeOp: 'store',
-                // before v101
-                loadValue: { r: 0, g: 0, b: 0, a: 1.0 }
+                storeOp: 'store'
             }
         ],
         depthStencilAttachment: {
@@ -178,8 +175,7 @@ function draw(
     passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
     // draw vertex count of cube
     passEncoder.draw(cube.vertexCount)
-    // endPass is deprecated after v101
-    passEncoder.end ? passEncoder.end() : passEncoder.endPass()
+    passEncoder.end()
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])
 }

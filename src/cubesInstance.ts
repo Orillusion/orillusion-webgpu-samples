@@ -135,9 +135,7 @@ function draw(
                 view: context.getCurrentTexture().createView(),
                 clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
                 loadOp: 'clear',
-                storeOp: 'store',
-                // before v101
-                loadValue: { r: 0, g: 0, b: 0, a: 1.0 }
+                storeOp: 'store'
             }
         ],
         depthStencilAttachment: {
@@ -156,8 +154,7 @@ function draw(
         passEncoder.setBindGroup(0, pipelineObj.group)
         passEncoder.draw(cube.vertexCount, NUM)
     }
-    // endPass is deprecated after v101
-    passEncoder.end ? passEncoder.end() : passEncoder.endPass()
+    passEncoder.end()
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])
 }
