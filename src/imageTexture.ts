@@ -2,7 +2,7 @@ import basicVert from './shaders/basic.vert.wgsl?raw'
 import sampleTexture from './shaders/sampleTexture.frag.wgsl?raw'
 import * as cube from './util/cube'
 import { getMvpMatrix } from './util/math'
-import textureUrl from '/texture.png?url'
+import textureUrl from '/texture.webp?url'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
