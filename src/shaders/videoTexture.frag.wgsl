@@ -1,5 +1,5 @@
-@group(0) @binding(1) var Sampler: sampler;
-@group(1) @binding(0) var Texture: texture_external;
+@group(1) @binding(0) var Sampler: sampler;
+@group(1) @binding(1) var Texture: texture_external;
 
 @stage(fragment)
 fn main(@location(0) fragUV: vec2<f32>,

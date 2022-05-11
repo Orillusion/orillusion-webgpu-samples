@@ -1,5 +1,5 @@
 import basicVert from './shaders/basic.vert.wgsl?raw'
-import sampleTexture from './shaders/sampleTexture.frag.wgsl?raw'
+import imageTexture from './shaders/imageTexture.frag.wgsl?raw'
 import * as cube from './util/cube'
 import { getMvpMatrix } from './util/math'
 import textureUrl from '/texture.webp?url'
@@ -43,20 +43,20 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
                         // position
                         shaderLocation: 0,
                         offset: 0,
-                        format: 'float32x3',
+                        format: 'float32x3'
                     },
                     {
                         // uv
                         shaderLocation: 1,
                         offset: 3 * 4,
-                        format: 'float32x2',
+                        format: 'float32x2'
                     }
                 ]
             }]
         },
         fragment: {
             module: device.createShaderModule({
-                code: sampleTexture,
+                code: imageTexture,
             }),
             entryPoint: 'main',
             targets: [
@@ -76,55 +76,30 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
         depthStencil: {
             depthWriteEnabled: true,
             depthCompare: 'less',
-            format: 'depth24plus',
+            format: 'depth24plus'
         }
     } as GPURenderPipelineDescriptor)
     // create depthTexture for renderPass
     const depthTexture = device.createTexture({
         size, format: 'depth24plus',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT
     })
     // create vertex buffer
     const vertexBuffer = device.createBuffer({
         label: 'GPUBuffer store vertex',
         size: cube.vertex.byteLength,
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
     })
     device.queue.writeBuffer(vertexBuffer, 0, cube.vertex)
     // create a mvp matrix buffer
     const mvpBuffer = device.createBuffer({
         label: 'GPUBuffer store 4x4 matrix',
         size: 4 * 4 * 4, // 4 x 4 x float32
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     })
-    // fetch image and upload to a GPUTexture
-    const res = await fetch(textureUrl)
-    const img = await res.blob()
-    // const img = document.createElement('img')
-    // img.src = textureUrl
-    // await img.decode()
-    const bitmap = await createImageBitmap(img)
-    const cubeTexture = device.createTexture({
-        size: [bitmap.width, bitmap.height, 1],
-        format: 'rgba8unorm',
-        usage:
-            GPUTextureUsage.TEXTURE_BINDING |
-            GPUTextureUsage.COPY_DST |
-            GPUTextureUsage.RENDER_ATTACHMENT,
-    })
-    device.queue.copyExternalImageToTexture(
-        { source: bitmap },
-        { texture: cubeTexture },
-        [bitmap.width, bitmap.height]
-    )
-    // Create a sampler with linear filtering for smooth interpolation.
-    const sampler = device.createSampler({
-        magFilter: 'linear',
-        minFilter: 'linear',
-    })
-    // create a uniform group contains matrix, texture & sampler
+    // create a uniform group contains matrix
     const uniformGroup = device.createBindGroup({
-        label: 'Uniform Group with Matrix/Texture/Sampler',
+        label: 'Uniform Group with Matrix',
         layout: pipeline.getBindGroupLayout(0),
         entries: [
             {
@@ -132,14 +107,6 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
                 resource: {
                     buffer: mvpBuffer
                 }
-            },
-            {
-                binding: 1,
-                resource: sampler
-            },
-            {
-                binding: 2,
-                resource: cubeTexture.createView()
             }
         ]
     })
@@ -157,7 +124,8 @@ function draw(
         mvpBuffer: GPUBuffer
         uniformGroup: GPUBindGroup
         depthTexture: GPUTexture
-    }
+    },
+    textureGroup: GPUBindGroup
 ) {
     // start encoder
     const commandEncoder = device.createCommandEncoder()
@@ -181,6 +149,8 @@ function draw(
     passEncoder.setPipeline(pipelineObj.pipeline)
     // set uniformGroup
     passEncoder.setBindGroup(0, pipelineObj.uniformGroup)
+    // set textureGroup
+    passEncoder.setBindGroup(1, textureGroup)
     // set vertex
     passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
     // draw vertex count of cube
@@ -196,6 +166,52 @@ async function run() {
         throw new Error('No Canvas')
     const { device, context, format, size } = await initWebGPU(canvas)
     const pipelineObj = await initPipeline(device, format, size)
+
+    // fetch an image and upload to GPUTexture
+    const res = await fetch(textureUrl)
+    const img = await res.blob()
+    // const img = document.createElement('img')
+    // img.src = textureUrl
+    // await img.decode()
+    const bitmap = await createImageBitmap(img)
+    const textureSize = [bitmap.width, bitmap.height]
+    // create empty texture
+    const texture = device.createTexture({
+        size: textureSize,
+        format: 'rgba8unorm',
+        usage:
+            GPUTextureUsage.TEXTURE_BINDING |
+            GPUTextureUsage.COPY_DST |
+            GPUTextureUsage.RENDER_ATTACHMENT
+    })
+    // update image to GPUTexture
+    device.queue.copyExternalImageToTexture(
+        { source: bitmap },
+        { texture: texture },
+        textureSize
+    )
+    // Create a sampler with linear filtering for smooth interpolation.
+    const sampler = device.createSampler({
+        // addressModeU: 'repeat',
+        // addressModeV: 'repeat',
+        magFilter: 'linear',
+        minFilter: 'linear'
+    })
+    const textureGroup = device.createBindGroup({
+        label: 'Texture Group with Texture/Sampler',
+        layout: pipelineObj.pipeline.getBindGroupLayout(1),
+        entries: [
+            {
+                binding: 0,
+                resource: sampler
+            },
+            {
+                binding: 1,
+                resource: texture.createView()
+            }
+        ]
+    })
+
     // default state
     let aspect = size.width / size.height
     const position = { x: 0, y: 0, z: -5 }
@@ -214,7 +230,7 @@ async function run() {
             mvpMatrix.buffer
         )
         // then draw
-        draw(device, context, pipelineObj)
+        draw(device, context, pipelineObj, textureGroup)
         requestAnimationFrame(frame)
     }
     frame()
