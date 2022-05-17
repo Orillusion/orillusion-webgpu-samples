@@ -33,6 +33,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{width:number, height:number}) {
     const pipeline = await device.createRenderPipelineAsync({
         label: 'Basic Pipline',
+        layout: 'auto',
         vertex: {
             module: device.createShaderModule({
                 code: basicInstanced,
@@ -167,7 +168,7 @@ async function run(){
     const {device, context, format, size} = await initWebGPU(canvas)
     const pipelineObj = await initPipeline(device, format, size)
     // create objects
-    let aspect = size.width/ size.height
+    let aspect = size.width / size.height
     const scene:any[] = []
     for(let i = 0; i < NUM; i++){
         // craete simple object
@@ -176,11 +177,10 @@ async function run(){
         const scale = {x:1, y:1, z:1}
         scene.push({position, rotation, scale})
     }
-    const allMatrix = new Float32Array(NUM * 4 * 4)
+    const mvpBuffer = new Float32Array(NUM * 4 * 4)
     // start loop
     function frame(){
         // update rotation for each object
-        console.time('write')
         for(let i = 0; i < scene.length - 1; i++){
             const obj = scene[i]
             const now = Date.now() / 1000
@@ -193,12 +193,11 @@ async function run(){
             //     i * 4 * 4 * 4, // offset for each object, no need to 256-byte aligned
             //     mvpMatrix
             // )
-            // or save to allMatrix first
-            allMatrix.set(mvpMatrix, i * 4 * 4)
+            // or save to mvpBuffer first
+            mvpBuffer.set(mvpMatrix, i * 4 * 4)
         }
         // the better way is update buffer in one write after loop
-        device.queue.writeBuffer(pipelineObj.mvpBuffer, 0, allMatrix)
-        console.timeEnd('write')
+        device.queue.writeBuffer(pipelineObj.mvpBuffer, 0, mvpBuffer)
         draw(device, context, pipelineObj)
         requestAnimationFrame(frame)
     }

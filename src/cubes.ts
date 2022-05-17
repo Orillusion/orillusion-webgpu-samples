@@ -30,6 +30,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{width:number, height:number}) {
     const pipeline = await device.createRenderPipelineAsync({
         label: 'Basic Pipline',
+        layout: 'auto',
         vertex: {
             module: device.createShaderModule({
                 code: basicVert,
@@ -167,16 +168,14 @@ function draw(
     passEncoder.setPipeline(pipelineObj.pipeline)
     // set vertex
     passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
-    for(let i = 0; i < 200000; i++)
     {
         // draw first cube
         passEncoder.setBindGroup(0, pipelineObj.group1)
-        //passEncoder.draw(cube.vertexCount)
+        passEncoder.draw(cube.vertexCount)
         // draw second cube
         passEncoder.setBindGroup(0, pipelineObj.group2)
-        //passEncoder.draw(cube.vertexCount)
+        passEncoder.draw(cube.vertexCount)
     }
-    passEncoder.draw(cube.vertexCount)
     passEncoder.end()
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])

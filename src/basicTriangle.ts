@@ -30,6 +30,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
 // create a simple pipiline
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat): Promise<GPURenderPipeline> {
     const descriptor: GPURenderPipelineDescriptor = {
+        layout: 'auto',
         vertex: {
             module: device.createShaderModule({
                 code: triangleVert

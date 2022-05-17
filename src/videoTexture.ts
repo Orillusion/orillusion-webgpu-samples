@@ -39,6 +39,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
 async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: { width: number, height: number }) {
     const pipeline = await device.createRenderPipelineAsync({
         label: 'Basic Pipline',
+        layout: 'auto',
         vertex: {
             module: device.createShaderModule({
                 code: basicVert,
