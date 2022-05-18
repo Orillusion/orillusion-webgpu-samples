@@ -1,5 +1,5 @@
 import standardVert from './shaders/standard.vert.wgsl?raw'
-import lambertFrag from './shaders/lambert.frag.wgsl?raw'
+import diffuseFrag from './shaders/diffuse.frag.wgsl?raw'
 import * as sphere from './util/sphere'
 import { getModelViewMatrix, getProjectionMatrix } from './util/math'
 
@@ -62,7 +62,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         },
         fragment: {
             module: device.createShaderModule({
-                code: lambertFrag,
+                code: diffuseFrag,
             }),
             entryPoint: 'main',
             targets: [
@@ -147,6 +147,12 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         ]
     })
     // create a uniform buffer to store pointLight
+    const ambientBuffer = device.createBuffer({
+        label: 'GPUBuffer store 4x4 matrix',
+        size: 1 * 4, // 8 x float32
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    })
+    // create a uniform buffer to store pointLight
     const pointBuffer = device.createBuffer({
         label: 'GPUBuffer store 4x4 matrix',
         size: 8 * 4, // 8 x float32
@@ -166,11 +172,17 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
             {
                 binding: 0,
                 resource: {
-                    buffer: pointBuffer
+                    buffer: ambientBuffer
                 }
             },
             {
                 binding: 1,
+                resource: {
+                    buffer: pointBuffer
+                }
+            },
+            {
+                binding: 2,
                 resource: {
                     buffer: directionalBuffer
                 }
@@ -181,7 +193,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     return {
         pipeline, vertexBuffer, indexBuffer, 
         modelViewBuffer, projectionBuffer, colorBuffer, vsGroup, 
-        pointBuffer, directionalBuffer, lightGroup, 
+        ambientBuffer, pointBuffer, directionalBuffer, lightGroup, 
         depthTexture
     }
 }
@@ -264,12 +276,15 @@ async function run(){
     device.queue.writeBuffer(pipelineObj.colorBuffer, 0, colorBuffer)
     device.queue.writeBuffer(pipelineObj.modelViewBuffer, 0, modelViewBuffer)
     device.queue.writeBuffer(pipelineObj.projectionBuffer, 0, projectionMatrix)
-
-    // lights, 2 x vec4: 4 position + 4 configs
+    
+    // ambient light, just 1 float32
+    const ambient = new Float32Array([0.1])
+    // point light, 2 x vec4: 4 position + 4 configs
     const pointLight = new Float32Array(8)
     pointLight[2] = -50 // z
     pointLight[4] = 1 // intensity
     pointLight[5] = 20 // radius
+    // dir light, 2 x vec4: 4 position + 4 configs
     const directionalLight = new Float32Array(8)
     directionalLight[4] = 0.5 // intensity
     
@@ -282,6 +297,7 @@ async function run(){
         directionalLight[0] = Math.sin(now / 1000)
         directionalLight[2] = Math.cos(now / 1000)
         // update light position & config to GPU
+        device.queue.writeBuffer(pipelineObj.ambientBuffer, 0, ambient)
         device.queue.writeBuffer(pipelineObj.pointBuffer, 0, pointLight)
         device.queue.writeBuffer(pipelineObj.directionalBuffer, 0, directionalLight)
 
@@ -291,6 +307,9 @@ async function run(){
     frame()
 
     // UI
+    document.querySelector('#ambient')?.addEventListener('input', (e:Event) => {
+        ambient[0] = +(e.target as HTMLInputElement).value
+    })
     document.querySelector('#point')?.addEventListener('input', (e:Event) => {
         pointLight[4] = +(e.target as HTMLInputElement).value
     })
