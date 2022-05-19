@@ -1,4 +1,4 @@
-@group(1) @binding(0) var<uniform> ambient : f32;
+@group(1) @binding(0) var<uniform> ambientIntensity : f32;
 @group(1) @binding(1) var<uniform> pointLight : array<vec4<f32>, 2>;
 @group(1) @binding(2) var<uniform> directionLight : array<vec4<f32>, 2>;
 
@@ -9,11 +9,14 @@ fn main(
     @location(2) fragUV: vec2<f32>,
     @location(3) fragColor: vec4<f32>
 ) -> @location(0) vec4<f32> {
-    var color = fragColor.rgb;    
-    var lightFactor: f32 = 0.0;
+    let color = fragColor.rgb;
+    let ambintLightColor = vec3(1.0,1.0,1.0);
+    let pointLightColor = vec3(1.0,1.0,1.0);
+    let dirLightColor = vec3(1.0,1.0,1.0);
+    var light = vec3(0.0, 0.0, 0.0);
 
     // ambient
-    lightFactor += ambient;
+    light += ambintLightColor * ambientIntensity;
 
     // Point Light
     var pointPosition = pointLight[0].xyz;
@@ -24,14 +27,14 @@ fn main(
     if(distance < pointRadius){
         var diffuse: f32 = max(dot(normalize(L), fragNormal), 0.0);
         var distanceFactor: f32 = pow(1.0 - distance / pointRadius, 2.0);
-        lightFactor += diffuse * distanceFactor * pointIntensity;
+        light += pointLightColor * diffuse * distanceFactor * pointIntensity;
     }
 
     // Directional Light
     var directionPosition = directionLight[0].xyz;
     var directionIntensity: f32 = directionLight[1][0];
     var diffuse: f32 = max(dot(normalize(directionPosition), fragNormal), 0.0);
-    lightFactor += diffuse * directionIntensity;
+    light += dirLightColor * diffuse * directionIntensity;
 
-    return vec4<f32>(color * min(lightFactor, 1.0), 1.0);
+    return vec4<f32>(color * light, 1.0);
 }
