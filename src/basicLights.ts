@@ -294,8 +294,9 @@ async function run(){
         const now = performance.now()
         pointLight[0] = 10 * Math.sin(now / 1000)
         pointLight[1] = 10 * Math.cos(now / 1000)
-        directionalLight[0] = Math.sin(now / 1000)
-        directionalLight[2] = Math.cos(now / 1000)
+        pointLight[2] = -60 + 10 * Math.cos(now / 1000)
+        directionalLight[0] = Math.sin(now / 1500)
+        directionalLight[2] = Math.cos(now / 1500)
         // update light position & config to GPU
         device.queue.writeBuffer(pipelineObj.ambientBuffer, 0, ambient)
         device.queue.writeBuffer(pipelineObj.pointBuffer, 0, pointLight)

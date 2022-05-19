@@ -9,7 +9,7 @@ fn main(
     @location(2) fragUV: vec2<f32>,
     @location(3) fragColor: vec4<f32>
 ) -> @location(0) vec4<f32> {
-    let color = fragColor.rgb;
+    let objectColor = fragColor.rgb;
     let ambintLightColor = vec3(1.0,1.0,1.0);
     let pointLightColor = vec3(1.0,1.0,1.0);
     let dirLightColor = vec3(1.0,1.0,1.0);
@@ -36,5 +36,5 @@ fn main(
     var diffuse: f32 = max(dot(normalize(directionPosition), fragNormal), 0.0);
     light += dirLightColor * diffuse * directionIntensity;
 
-    return vec4<f32>(color * light, 1.0);
+    return vec4<f32>(objectColor * light, 1.0);
 }

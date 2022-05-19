@@ -4,7 +4,7 @@ import * as cube from './util/cube'
 import { getMvpMatrix } from './util/math'
 
 // total objects
-const NUM = 10000
+const NUM = 500 // 10000
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
@@ -172,7 +172,7 @@ async function run(){
     const scene:any[] = []
     for(let i = 0; i < NUM; i++){
         // craete simple object
-        const position = {x: Math.random() * 30 - 15, y: Math.random() * 30 - 15, z: Math.random() * 30 - 60}
+        const position = {x: Math.random() * 40 - 20, y: Math.random() * 40 - 20, z:  - 50 - Math.random() * 50}
         const rotation = {x: 0, y: 0, z: 0}
         const scale = {x:1, y:1, z:1}
         scene.push({position, rotation, scale})
