@@ -303,9 +303,10 @@ const index = new Uint16Array([
     106,105,117,
     107,106,118,
     108,107,119,
-    109,108,120,
+    109,108,120
 ])
 
 const vertexCount = 121
+const indexCount = 540
 
-export {vertex, index, vertexCount}
+export {vertex, index, vertexCount, indexCount}

@@ -13,16 +13,19 @@ struct VertexOutput {
 @stage(vertex)
 fn main(
     @builtin(instance_index) index : u32,
-    @location(0) position : vec4<f32>,
+    @location(0) position : vec3<f32>,
     @location(1) normal : vec3<f32>,
     @location(2) uv : vec2<f32>,
 ) -> VertexOutput {
     let worldMatrix = modelView[index];
     let mvp = projection * worldMatrix;
-
+    let pos = vec4(position, 1.0);
+    
     var output : VertexOutput;
-    output.Position = mvp * position;
-    output.fragPosition = (worldMatrix * position).xyz;
+    output.Position = mvp * pos;
+    output.fragPosition = (worldMatrix * pos).xyz;
+    // it should use transpose(inverse(worldMatrix)) if consider non-uniform scale
+    // also inverse() is not available in wgsl, better do in JS or CS
     output.fragNormal =  mat3x3<f32>(worldMatrix[0].xyz, worldMatrix[1].xyz, worldMatrix[2].xyz) * normal;
     output.fragUV = uv;
     output.color = colors[index];

@@ -1,5 +1,5 @@
 import standardVert from './shaders/standard.vert.wgsl?raw'
-import diffuseFrag from './shaders/diffuse.frag.wgsl?raw'
+import lambert from './shaders/lambert.frag.wgsl?raw'
 import * as sphere from './util/sphere'
 import { getModelViewMatrix, getProjectionMatrix } from './util/math'
 
@@ -62,7 +62,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         },
         fragment: {
             module: device.createShaderModule({
-                code: diffuseFrag,
+                code: lambert,
             }),
             entryPoint: 'main',
             targets: [
@@ -99,7 +99,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     // create index buffer
     const indexBuffer = device.createBuffer({
         label: 'GPUBuffer store vertex index',
-        size: sphere.vertex.byteLength,
+        size: sphere.index.byteLength,
         usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
     })
     device.queue.writeBuffer(indexBuffer, 0, sphere.index)
@@ -149,19 +149,19 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     // create a uniform buffer to store pointLight
     const ambientBuffer = device.createBuffer({
         label: 'GPUBuffer store 4x4 matrix',
-        size: 1 * 4, // 8 x float32
+        size: 1 * 4, // 1 x float32: intensity f32
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     })
     // create a uniform buffer to store pointLight
     const pointBuffer = device.createBuffer({
         label: 'GPUBuffer store 4x4 matrix',
-        size: 8 * 4, // 8 x float32
+        size: 8 * 4, // 8 x float32: position vec4 + 4 configs
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     })
     // create a uniform buffer to store dirLight
     const directionalBuffer = device.createBuffer({
         label: 'GPUBuffer store 4x4 matrix',
-        size: 8 * 4, // 8 x float32
+        size: 8 * 4, // 8 x float32: position vec4 + 4 configs
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     })
     // create a uniform group for light Matrix
@@ -237,7 +237,7 @@ function draw(
         // draw NUM cubes in one draw()
         passEncoder.setBindGroup(0, pipelineObj.vsGroup)
         passEncoder.setBindGroup(1, pipelineObj.lightGroup)
-        passEncoder.drawIndexed(sphere.index.length, NUM)
+        passEncoder.drawIndexed(sphere.indexCount, NUM)
     }
     passEncoder.end()
     // webgpu run in a separate process, all the commands will be executed after submit
@@ -290,14 +290,14 @@ async function run(){
     
     // start loop
     function frame(){
-        // update light position
+        // update lights position
         const now = performance.now()
         pointLight[0] = 10 * Math.sin(now / 1000)
         pointLight[1] = 10 * Math.cos(now / 1000)
         pointLight[2] = -60 + 10 * Math.cos(now / 1000)
         directionalLight[0] = Math.sin(now / 1500)
         directionalLight[2] = Math.cos(now / 1500)
-        // update light position & config to GPU
+        // update lights position & config to GPU
         device.queue.writeBuffer(pipelineObj.ambientBuffer, 0, ambient)
         device.queue.writeBuffer(pipelineObj.pointBuffer, 0, pointLight)
         device.queue.writeBuffer(pipelineObj.directionalBuffer, 0, directionalLight)
