@@ -1,6 +1,7 @@
 import standardVert from './shaders/standard.vert.wgsl?raw'
 import lambert from './shaders/lambert.frag.wgsl?raw'
 import * as sphere from './util/sphere'
+import * as box from './util/box'
 import { getModelViewMatrix, getProjectionMatrix } from './util/math'
 
 // initialize webgpu device & config canvas context
@@ -89,20 +90,36 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         size, format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
-    // create vertex buffer
-    const vertexBuffer = device.createBuffer({
-        label: 'GPUBuffer store vertex',
-        size: sphere.vertex.byteLength,
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-    })
-    device.queue.writeBuffer(vertexBuffer, 0, sphere.vertex)
-    // create index buffer
-    const indexBuffer = device.createBuffer({
-        label: 'GPUBuffer store vertex index',
-        size: sphere.index.byteLength,
-        usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
-    })
-    device.queue.writeBuffer(indexBuffer, 0, sphere.index)
+    // create vertex & index buffer
+    const boxBuffer = {
+        vertex: device.createBuffer({
+            label: 'GPUBuffer store vertex',
+            size: box.vertex.byteLength,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+        }),
+        index: device.createBuffer({
+            label: 'GPUBuffer store vertex index',
+            size: box.index.byteLength,
+            usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+        })
+    }
+    const sphereBuffer = {
+        vertex: device.createBuffer({
+            label: 'GPUBuffer store vertex',
+            size: sphere.vertex.byteLength,
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+        }),
+        index: device.createBuffer({
+            label: 'GPUBuffer store vertex index',
+            size: sphere.index.byteLength,
+            usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+        })
+    }
+    device.queue.writeBuffer(boxBuffer.vertex, 0, box.vertex)
+    device.queue.writeBuffer(boxBuffer.index, 0, box.index)
+    device.queue.writeBuffer(sphereBuffer.vertex, 0, sphere.vertex)
+    device.queue.writeBuffer(sphereBuffer.index, 0, sphere.index)
+
     // create a 4x4xNUM STORAGE buffer to store matrix
     const modelViewBuffer = device.createBuffer({
         label: 'GPUBuffer store n*4x4 matrix',
@@ -191,7 +208,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     })
     // return all vars
     return {
-        pipeline, vertexBuffer, indexBuffer, 
+        pipeline, boxBuffer, sphereBuffer, 
         modelViewBuffer, projectionBuffer, colorBuffer, vsGroup, 
         ambientBuffer, pointBuffer, directionalBuffer, lightGroup, 
         depthTexture
@@ -204,8 +221,8 @@ function draw(
     context: GPUCanvasContext,
     pipelineObj: {
         pipeline: GPURenderPipeline,
-        vertexBuffer: GPUBuffer,
-        indexBuffer: GPUBuffer,
+        boxBuffer: {vertex: GPUBuffer, index: GPUBuffer},
+        sphereBuffer: {vertex: GPUBuffer, index: GPUBuffer},
         vsGroup: GPUBindGroup,
         lightGroup: GPUBindGroup
         depthTexture: GPUTexture
@@ -230,15 +247,16 @@ function draw(
     }
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     passEncoder.setPipeline(pipelineObj.pipeline)
-    // set vertex
-    passEncoder.setVertexBuffer(0, pipelineObj.vertexBuffer)
-    passEncoder.setIndexBuffer(pipelineObj.indexBuffer, 'uint16')
-    {
-        // draw NUM cubes in one draw()
-        passEncoder.setBindGroup(0, pipelineObj.vsGroup)
-        passEncoder.setBindGroup(1, pipelineObj.lightGroup)
-        passEncoder.drawIndexed(sphere.indexCount, NUM)
-    }
+    passEncoder.setBindGroup(0, pipelineObj.vsGroup)
+    passEncoder.setBindGroup(1, pipelineObj.lightGroup)
+    // set box vertex
+    passEncoder.setVertexBuffer(0, pipelineObj.boxBuffer.vertex)
+    passEncoder.setIndexBuffer(pipelineObj.boxBuffer.index, 'uint16')
+    passEncoder.drawIndexed(box.indexCount, NUM / 2, 0, 0, 0)
+    // set sphere vertex
+    passEncoder.setVertexBuffer(0, pipelineObj.sphereBuffer.vertex)
+    passEncoder.setIndexBuffer(pipelineObj.sphereBuffer.index, 'uint16')
+    passEncoder.drawIndexed(sphere.indexCount, NUM / 2, 0, 0, NUM / 2)
     passEncoder.end()
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])
@@ -264,7 +282,7 @@ async function run(){
     for(let i = 0; i < NUM; i++){
         // craete simple object
         const position = {x: Math.random() * 40 - 20, y: Math.random() * 40 - 20, z:  - 50 - Math.random() * 50}
-        const rotation = {x: 0, y: 0, z: 0}
+        const rotation = {x: Math.random(), y: Math.random(), z: Math.random()}
         const scale = {x:1, y:1, z:1}
         const modelView = getModelViewMatrix(position, rotation, scale)
         modelViewBuffer.set(modelView, i * 4 * 4)
