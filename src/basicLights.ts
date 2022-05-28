@@ -1,4 +1,4 @@
-import standardVert from './shaders/standard.vert.wgsl?raw'
+import normal from './shaders/normal.vert.wgsl?raw'
 import lambert from './shaders/lambert.frag.wgsl?raw'
 import * as sphere from './util/sphere'
 import * as box from './util/box'
@@ -34,7 +34,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         layout: 'auto',
         vertex: {
             module: device.createShaderModule({
-                code: standardVert,
+                code: normal,
             }),
             entryPoint: 'main',
             buffers: [{
@@ -128,7 +128,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     })
     // create a 4x4 uniform buffer to store projection
     const projectionBuffer = device.createBuffer({
-        label: 'GPUBuffer store n*4x4 matrix',
+        label: 'GPUBuffer store 4x4 matrix',
         size: 4 * 4 * 4, // 4 x 4 x float32
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     })

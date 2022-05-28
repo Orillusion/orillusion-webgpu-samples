@@ -26,7 +26,7 @@ fn main(
     output.fragPosition = (worldMatrix * pos).xyz;
     // it should use transpose(inverse(worldMatrix)) if consider non-uniform scale
     // also inverse() is not available in wgsl, better do in JS or CS
-    output.fragNormal =  mat3x3<f32>(worldMatrix[0].xyz, worldMatrix[1].xyz, worldMatrix[2].xyz) * normal;
+    output.fragNormal =  (worldMatrix * vec4<f32>(normal, 0.0)).xyz;
     output.fragUV = uv;
     output.color = colors[index];
     return output;

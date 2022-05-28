@@ -14,14 +14,14 @@ fn main(
     let pointLightColor = vec3(1.0,1.0,1.0);
     let dirLightColor = vec3(1.0,1.0,1.0);
 
-    var result = vec3(0.0, 0.0, 0.0);
+    var lightResult = vec3(0.0, 0.0, 0.0);
     // ambient
-    result += ambintLightColor * ambientIntensity;
+    lightResult += ambintLightColor * ambientIntensity;
     // Directional Light
     var directionPosition = directionLight[0].xyz;
     var directionIntensity: f32 = directionLight[1][0];
     var diffuse: f32 = max(dot(normalize(directionPosition), fragNormal), 0.0);
-    result += dirLightColor * directionIntensity * diffuse;
+    lightResult += dirLightColor * directionIntensity * diffuse;
     // Point Light
     var pointPosition = pointLight[0].xyz;
     var pointIntensity: f32 = pointLight[1][0];
@@ -31,8 +31,8 @@ fn main(
     if(distance < pointRadius){
         var diffuse: f32 = max(dot(normalize(L), fragNormal), 0.0);
         var distanceFactor: f32 = pow(1.0 - distance / pointRadius, 2.0);
-        result += pointLightColor * pointIntensity * diffuse * distanceFactor;
+        lightResult += pointLightColor * pointIntensity * diffuse * distanceFactor;
     }
 
-    return vec4<f32>(objectColor * result, 1.0);
+    return vec4<f32>(objectColor * lightResult, 1.0);
 }
