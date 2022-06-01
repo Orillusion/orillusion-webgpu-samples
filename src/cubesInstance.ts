@@ -3,9 +3,6 @@ import positionFrag from './shaders/position.frag.wgsl?raw'
 import * as cube from './util/cube'
 import { getMvpMatrix } from './util/math'
 
-// total objects
-const NUM = 500 // 10000
-
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
     if(!navigator.gpu)
@@ -15,14 +12,13 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
         throw new Error('No Adapter Found')
     const device = await adapter.requestDevice()
     const context = canvas.getContext('webgpu') as GPUCanvasContext
-    const format = context.getPreferredFormat(adapter)
+    const format = navigator.gpu.getPreferredCanvasFormat ? navigator.gpu.getPreferredCanvasFormat() : context.getPreferredFormat(adapter)
     const devicePixelRatio = window.devicePixelRatio || 1
-    const size = {
-        width: canvas.clientWidth * devicePixelRatio,
-        height: canvas.clientHeight * devicePixelRatio,
-    }
+    canvas.width = canvas.clientWidth * devicePixelRatio
+    canvas.height = canvas.clientHeight * devicePixelRatio
+    const size = {width: canvas.width, height: canvas.height}
     context.configure({
-        device, format, size,
+        device, format,
         // prevent chrome warning after v102
         compositingAlphaMode: 'opaque'
     })
@@ -160,6 +156,8 @@ function draw(
     device.queue.submit([commandEncoder.finish()])
 }
 
+// total objects
+const NUM = 500 // 10000
 async function run(){
     const canvas = document.querySelector('canvas')
     if (!canvas)
@@ -170,6 +168,7 @@ async function run(){
     // create objects
     let aspect = size.width / size.height
     const scene:any[] = []
+    const mvpBuffer = new Float32Array(NUM * 4 * 4)
     for(let i = 0; i < NUM; i++){
         // craete simple object
         const position = {x: Math.random() * 40 - 20, y: Math.random() * 40 - 20, z:  - 50 - Math.random() * 50}
@@ -177,7 +176,6 @@ async function run(){
         const scale = {x:1, y:1, z:1}
         scene.push({position, rotation, scale})
     }
-    const mvpBuffer = new Float32Array(NUM * 4 * 4)
     // start loop
     function frame(){
         // update rotation for each object
@@ -205,13 +203,9 @@ async function run(){
 
     // re-configure context on resize
     window.addEventListener('resize', ()=>{
-        size.width = canvas.clientWidth * devicePixelRatio
-        size.height = canvas.clientHeight * devicePixelRatio
-        // reconfigure canvas
-        context.configure({
-            device, format, size,
-            compositingAlphaMode: 'opaque'
-        })
+        size.width = canvas.width = canvas.clientWidth * devicePixelRatio
+        size.height = canvas.height = canvas.clientHeight * devicePixelRatio
+        // don't need to recall context.configure() after v104
         // re-create depth texture
         pipelineObj.depthTexture.destroy()
         pipelineObj.depthTexture = device.createTexture({

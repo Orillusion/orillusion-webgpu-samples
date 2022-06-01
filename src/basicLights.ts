@@ -13,14 +13,13 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
         throw new Error('No Adapter Found')
     const device = await adapter.requestDevice()
     const context = canvas.getContext('webgpu') as GPUCanvasContext
-    const format = context.getPreferredFormat(adapter)
+    const format = navigator.gpu.getPreferredCanvasFormat ? navigator.gpu.getPreferredCanvasFormat() : context.getPreferredFormat(adapter)
     const devicePixelRatio = window.devicePixelRatio || 1
-    const size = {
-        width: canvas.clientWidth * devicePixelRatio,
-        height: canvas.clientHeight * devicePixelRatio,
-    }
+    canvas.width = canvas.clientWidth * devicePixelRatio
+    canvas.height = canvas.clientHeight * devicePixelRatio
+    const size = {width: canvas.width, height: canvas.height}
     context.configure({
-        device, format, size,
+        device, format,
         // prevent chrome warning after v102
         compositingAlphaMode: 'opaque'
     })
@@ -264,9 +263,6 @@ function draw(
 
 // total objects
 const NUM = 500
-const modelViewBuffer = new Float32Array(NUM * 4 * 4)
-const colorBuffer = new Float32Array(NUM * 4)
-
 async function run(){
     const canvas = document.querySelector('canvas')
     if (!canvas)
@@ -276,24 +272,23 @@ async function run(){
     const pipelineObj = await initPipeline(device, format, size)
 
     // create objects
-    let aspect = size.width / size.height
-    const projectionMatrix = getProjectionMatrix(aspect)
     const scene:any[] = []
+    const modelViewMatrix = new Float32Array(NUM * 4 * 4)
+    const colorBuffer = new Float32Array(NUM * 4)
     for(let i = 0; i < NUM; i++){
         // craete simple object
         const position = {x: Math.random() * 40 - 20, y: Math.random() * 40 - 20, z:  - 50 - Math.random() * 50}
         const rotation = {x: Math.random(), y: Math.random(), z: Math.random()}
         const scale = {x:1, y:1, z:1}
         const modelView = getModelViewMatrix(position, rotation, scale)
-        modelViewBuffer.set(modelView, i * 4 * 4)
+        modelViewMatrix.set(modelView, i * 4 * 4)
         // random color for each object
         colorBuffer.set([Math.random(), Math.random(), Math.random(), 1], i * 4)
         scene.push({position, rotation, scale})
     }
     // write matrix & colors
     device.queue.writeBuffer(pipelineObj.colorBuffer, 0, colorBuffer)
-    device.queue.writeBuffer(pipelineObj.modelViewBuffer, 0, modelViewBuffer)
-    device.queue.writeBuffer(pipelineObj.projectionBuffer, 0, projectionMatrix)
+    device.queue.writeBuffer(pipelineObj.modelViewBuffer, 0, modelViewMatrix)
     
     // ambient light, just 1 float32
     const ambient = new Float32Array([0.1])
@@ -318,7 +313,6 @@ async function run(){
         // update lights position & config to GPU
         device.queue.writeBuffer(pipelineObj.ambientBuffer, 0, ambient)
         device.queue.writeBuffer(pipelineObj.pointBuffer, 0, pointLight)
-        device.queue.writeBuffer(pipelineObj.directionalBuffer, 0, directionalLight)
 
         draw(device, context, pipelineObj)
         requestAnimationFrame(frame)
@@ -339,15 +333,17 @@ async function run(){
         directionalLight[4] = +(e.target as HTMLInputElement).value
     })
 
+    function updateCamera(){
+        const aspect = size.width / size.height
+        const projectionMatrix = getProjectionMatrix(aspect)
+        device.queue.writeBuffer(pipelineObj.projectionBuffer, 0, projectionMatrix)
+    }
+    updateCamera()
     // re-configure context on resize
     window.addEventListener('resize', ()=>{
-        size.width = canvas.clientWidth * devicePixelRatio
-        size.height = canvas.clientHeight * devicePixelRatio
-        // reconfigure canvas
-        context.configure({
-            device, format, size,
-            compositingAlphaMode: 'opaque'
-        })
+        size.width = canvas.width = canvas.clientWidth * devicePixelRatio
+        size.height = canvas.height = canvas.clientHeight * devicePixelRatio
+        // don't need to recall context.configure() after v104
         // re-create depth texture
         pipelineObj.depthTexture.destroy()
         pipelineObj.depthTexture = device.createTexture({
@@ -355,10 +351,7 @@ async function run(){
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
         })
         // update aspect
-        aspect = size.width/ size.height
-        // update
-        const projectionMatrix = getProjectionMatrix(aspect)
-        device.queue.writeBuffer(pipelineObj.projectionBuffer, 0, projectionMatrix)
+        updateCamera()
     })
 }
 run()

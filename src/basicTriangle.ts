@@ -13,15 +13,14 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
         throw new Error('No Adapter Found')
     const device = await adapter.requestDevice()
     const context = canvas.getContext('webgpu') as GPUCanvasContext
-    const format = context.getPreferredFormat(adapter)
+    const format = navigator.gpu.getPreferredCanvasFormat ? navigator.gpu.getPreferredCanvasFormat() : context.getPreferredFormat(adapter)
     const devicePixelRatio = window.devicePixelRatio || 1
-    const size = {
-        width: canvas.clientWidth * devicePixelRatio,
-        height: canvas.clientHeight * devicePixelRatio
-    }
+    canvas.width = canvas.clientWidth * devicePixelRatio
+    canvas.height = canvas.clientHeight * devicePixelRatio
+    const size = {width: canvas.width, height: canvas.height}
     context.configure({
         // json specific format when key and value are the same
-        device, format, size,
+        device, format,
         // prevent chrome warning
         compositingAlphaMode: 'opaque'
     })
@@ -88,14 +87,9 @@ async function run(){
     
     // re-configure context on resize
     window.addEventListener('resize', ()=>{
-        context.configure({
-            device, format,
-            size: {
-                width: canvas.clientWidth * devicePixelRatio,
-                height: canvas.clientHeight * devicePixelRatio
-            },
-            compositingAlphaMode: 'opaque'
-        })
+        canvas.width = canvas.clientWidth * devicePixelRatio
+        canvas.height = canvas.clientHeight * devicePixelRatio
+        // don't need to recall context.configure() after v104
         draw(device, context, pipeline)
     })
 }
