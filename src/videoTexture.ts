@@ -4,14 +4,6 @@ import * as cube from './util/cube'
 import { getMvpMatrix } from './util/math'
 import videoUrl from '/video.mp4?url'
 
-// set Video element and play in advanced
-const video = document.createElement('video');
-video.loop = true
-video.autoplay = true
-video.muted = true
-video.src = videoUrl
-await video.play()
-
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
     if (!navigator.gpu)
@@ -169,6 +161,14 @@ function draw(
 }
 
 async function run() {
+    // set Video element and play in advanced
+    const video = document.createElement('video');
+    video.loop = true
+    video.autoplay = true
+    video.muted = true
+    video.src = videoUrl
+    await video.play()
+
     const canvas = document.querySelector('canvas')
     if (!canvas)
         throw new Error('No Canvas')

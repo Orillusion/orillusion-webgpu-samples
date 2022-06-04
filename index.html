@@ -88,8 +88,8 @@
         const samples = document.querySelectorAll('.sample')
         for(let sample of samples){
             sample.addEventListener('click', ()=>{
-                window.location.href = '/#' + sample.target
-                iframe.src = '/samples/' + sample.target + '.html'
+                window.location.hash = sample.target
+                iframe.src = './samples/' + sample.target + '.html'
                 button.href = 'https://github.com/Orillusion/orillusion-webgpu-samples/tree/main/src/' + sample.target + '.ts'
                 document.querySelector('.active').classList.remove('active')
                 sample.classList.add('active')

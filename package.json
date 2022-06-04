@@ -10,6 +10,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
+        "build:github" : "tsc && vite build --config vite.config.github.js",
         "preview": "vite preview"
     },
     "devDependencies": {
