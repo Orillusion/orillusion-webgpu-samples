@@ -19,7 +19,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     context.configure({
         device, format,
         // prevent chrome warning after v102
-        compositingAlphaMode: 'opaque'
+        alphaMode: 'opaque'
     })
     return {device, context, format, size}
 }

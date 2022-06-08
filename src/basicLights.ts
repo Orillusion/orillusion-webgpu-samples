@@ -21,7 +21,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     context.configure({
         device, format,
         // prevent chrome warning after v102
-        compositingAlphaMode: 'opaque'
+        alphaMode: 'opaque'
     })
     return {device, context, format, size}
 }
@@ -89,6 +89,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         size, format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
+    const depthView = depthTexture.createView()
     // create vertex & index buffer
     const boxBuffer = {
         vertex: device.createBuffer({
@@ -210,7 +211,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         pipeline, boxBuffer, sphereBuffer, 
         modelViewBuffer, projectionBuffer, colorBuffer, vsGroup, 
         ambientBuffer, pointBuffer, directionalBuffer, lightGroup, 
-        depthTexture
+        depthTexture, depthView
     }
 }
 
@@ -224,7 +225,7 @@ function draw(
         sphereBuffer: {vertex: GPUBuffer, index: GPUBuffer},
         vsGroup: GPUBindGroup,
         lightGroup: GPUBindGroup
-        depthTexture: GPUTexture
+        depthView: GPUTextureView
     },
 ) {
     const commandEncoder = device.createCommandEncoder()
@@ -238,7 +239,7 @@ function draw(
             }
         ],
         depthStencilAttachment: {
-            view: pipelineObj.depthTexture.createView(),
+            view: pipelineObj.depthView,
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
@@ -350,6 +351,7 @@ async function run(){
             size, format: 'depth24plus',
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
         })
+        pipelineObj.depthView = pipelineObj.depthTexture.createView()
         // update aspect
         updateCamera()
     })

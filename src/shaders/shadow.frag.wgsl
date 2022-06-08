@@ -14,7 +14,7 @@ fn main(
     // Directional Light
     let diffuse: f32 = max(dot(normalize(lightPosition.xyz), fragNormal), 0.0);
     // add shadow
-    var visibility : f32 = 0.0;
+    var shadow : f32 = 0.0;
     // apply Percentage-closer filtering (PCF)
     // sample nearest 9 texels to smooth result
     let size = f32(textureDimensions(shadowMap).x);
@@ -25,13 +25,13 @@ fn main(
             f32(x) * oneOverSize,
             f32(y) * oneOverSize);
 
-            visibility = visibility + textureSampleCompare(
+            shadow = shadow + textureSampleCompare(
             shadowMap, shadowSampler,
             shadowPos.xy + offset, shadowPos.z - 0.005); // apply a small bias to avoid acne
         }
     }
-    visibility = visibility / 9.0;
+    shadow = shadow / 9.0;
     // ambient + diffuse * shadow
-    let lightFactor = min(0.3 + visibility * diffuse, 1.0);
+    let lightFactor = min(0.3 + shadow * diffuse, 1.0);
     return vec4<f32>(objectColor * lightFactor, 1.0);
 }

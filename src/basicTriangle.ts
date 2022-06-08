@@ -22,7 +22,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
         // json specific format when key and value are the same
         device, format,
         // prevent chrome warning
-        compositingAlphaMode: 'opaque'
+        alphaMode: 'opaque'
     })
     return {device, context, format, size}
 }

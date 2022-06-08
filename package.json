@@ -10,11 +10,11 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
-        "build:github" : "tsc && vite build --config vite.config.github.js",
+        "build:github": "tsc && vite build --config vite.config.github.js",
         "preview": "vite preview"
     },
     "devDependencies": {
-        "@webgpu/types": "^0.1.17",
+        "@webgpu/types": "^0.1.19",
         "typescript": "^4.5.4",
         "vite": "^2.9.9"
     },

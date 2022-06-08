@@ -24,7 +24,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     context.configure({
         device, format,
         // prevent chrome warning after v102
-        compositingAlphaMode: 'opaque'
+        alphaMode: 'opaque'
     })
     return {device, context, format, size}
 }
@@ -98,10 +98,11 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         primitive, depthStencil
       } as GPURenderPipelineDescriptor)
     // create depthTexture for renderPass
-    const depthTexture = device.createTexture({
+    const renderDepthTexture = device.createTexture({
         size, format: 'depth32float',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
+    const renderDepthView = renderDepthTexture.createView()
     // create a depthTexture for shadow
     const shadowDepthTexture = device.createTexture({
         size: [2048, 2048, 1],
@@ -242,7 +243,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         renderPipeline, shadowPipeline, boxBuffer, sphereBuffer, 
         modelViewBuffer, cameraProjectionBuffer, lightProjectionBuffer, colorBuffer, lightBuffer,
         vsGroup, fsGroup, shadowGroup, 
-        depthTexture, shadowDepthView
+        renderDepthTexture, renderDepthView, shadowDepthTexture, shadowDepthView
     }
 }
 
@@ -258,7 +259,7 @@ function draw(
         vsGroup: GPUBindGroup,
         shadowGroup: GPUBindGroup,
         fsGroup: GPUBindGroup,
-        depthTexture: GPUTexture,
+        renderDepthView: GPUTextureView,
         shadowDepthView: GPUTextureView
     },
 ) {
@@ -282,7 +283,7 @@ function draw(
             }
         ],
         depthStencilAttachment: {
-            view: pipelineObj.depthTexture.createView(),
+            view: pipelineObj.renderDepthView,
             depthClearValue: 1.0,
             depthLoadOp: 'clear',
             depthStoreOp: 'store',
@@ -391,7 +392,7 @@ async function run(){
             lightPosition, 
             origin, up
         )
-        mat4.ortho(lightProjectionMatrix, -80, 80, -80, 80, -100, 200)
+        mat4.ortho(lightProjectionMatrix, -80, 80, -80, 80, -200, 200)
         mat4.multiply(lightProjectionMatrix, lightProjectionMatrix, lightViewMatrix)
         device.queue.writeBuffer(pipelineObj.lightProjectionBuffer, 0, lightProjectionMatrix as Float32Array)
         device.queue.writeBuffer(pipelineObj.lightBuffer, 0, lightPosition as Float32Array)
@@ -424,11 +425,12 @@ async function run(){
         size.height = canvas.height = canvas.clientHeight * devicePixelRatio
         // don't need to recall context.configure() after v104
         // re-create depth texture
-        pipelineObj.depthTexture.destroy()
-        pipelineObj.depthTexture = device.createTexture({
+        pipelineObj.renderDepthTexture.destroy()
+        pipelineObj.renderDepthTexture = device.createTexture({
             size, format: 'depth32float',
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
         })
+        pipelineObj.renderDepthView = pipelineObj.renderDepthTexture.createView()
         // update aspect
         updateCamera()
     })
