@@ -9,7 +9,7 @@ import { mat4, vec3 } from 'gl-matrix'
 
 // initialize webgpu device & config canvas context
 async function initWebGPU(canvas: HTMLCanvasElement) {
-    if(!navigator.gpu)
+    if (!navigator.gpu)
         throw new Error('Not Support WebGPU')
     const adapter = await navigator.gpu.requestAdapter()
     if (!adapter)
@@ -20,17 +20,17 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
     const devicePixelRatio = window.devicePixelRatio || 1
     canvas.width = canvas.clientWidth * devicePixelRatio
     canvas.height = canvas.clientHeight * devicePixelRatio
-    const size = {width: canvas.width, height: canvas.height}
+    const size = { width: canvas.width, height: canvas.height }
     context.configure({
         device, format,
         // prevent chrome warning after v102
         alphaMode: 'opaque'
     })
-    return {device, context, format, size}
+    return { device, context, format, size }
 }
 
 // create pipiline & buffers
-async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{width:number, height:number}) {
+async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: { width: number, height: number }) {
     const vertexBuffers: Iterable<GPUVertexBufferLayout> = [{
         arrayStride: 8 * 4, // 3 position 2 uv,
         attributes: [
@@ -64,7 +64,7 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         format: 'depth32float',
     }
     const renderPipeline = await device.createRenderPipelineAsync({
-        label: 'Basic Pipline',
+        label: 'Render Pipline',
         layout: 'auto',
         vertex: {
             module: device.createShaderModule({
@@ -87,16 +87,17 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         primitive, depthStencil
     } as GPURenderPipelineDescriptor)
     const shadowPipeline = await device.createRenderPipelineAsync({
+        label: 'Shadow Pipline',
         layout: 'auto',
         vertex: {
-          module: device.createShaderModule({
-            code: shadowDepth,
-          }),
-          entryPoint: 'main',
-          buffers: vertexBuffers
+            module: device.createShaderModule({
+                code: shadowDepth,
+            }),
+            entryPoint: 'main',
+            buffers: vertexBuffers
         },
         primitive, depthStencil
-      } as GPURenderPipelineDescriptor)
+    } as GPURenderPipelineDescriptor)
     // create depthTexture for renderPass
     const renderDepthTexture = device.createTexture({
         size, format: 'depth32float',
@@ -240,22 +241,22 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     })
     // return all vars
     return {
-        renderPipeline, shadowPipeline, boxBuffer, sphereBuffer, 
+        renderPipeline, shadowPipeline, boxBuffer, sphereBuffer,
         modelViewBuffer, cameraProjectionBuffer, lightProjectionBuffer, colorBuffer, lightBuffer,
-        vsGroup, fsGroup, shadowGroup, 
+        vsGroup, fsGroup, shadowGroup,
         renderDepthTexture, renderDepthView, shadowDepthTexture, shadowDepthView
     }
 }
 
 // create & submit device commands
 function draw(
-    device: GPUDevice, 
+    device: GPUDevice,
     context: GPUCanvasContext,
     pipelineObj: {
         renderPipeline: GPURenderPipeline,
         shadowPipeline: GPURenderPipeline,
-        boxBuffer: {vertex: GPUBuffer, index: GPUBuffer},
-        sphereBuffer: {vertex: GPUBuffer, index: GPUBuffer},
+        boxBuffer: { vertex: GPUBuffer, index: GPUBuffer },
+        sphereBuffer: { vertex: GPUBuffer, index: GPUBuffer },
         vsGroup: GPUBindGroup,
         shadowGroup: GPUBindGroup,
         fsGroup: GPUBindGroup,
@@ -264,46 +265,48 @@ function draw(
     },
 ) {
     const commandEncoder = device.createCommandEncoder()
-    const shadowPassDescriptor: GPURenderPassDescriptor = {
-        colorAttachments: [],
-        depthStencilAttachment: {
-            view: pipelineObj.shadowDepthView,
-            depthClearValue: 1.0,
-            depthLoadOp: 'clear',
-            depthStoreOp: 'store',
-        }
-    }
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-        colorAttachments: [
-            {
-                view: context.getCurrentTexture().createView(),
-                clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
-                loadOp: 'clear',
-                storeOp: 'store'
-            }
-        ],
-        depthStencilAttachment: {
-            view: pipelineObj.renderDepthView,
-            depthClearValue: 1.0,
-            depthLoadOp: 'clear',
-            depthStoreOp: 'store',
-        }
-    }
     // start shadowPass
     {
+        const shadowPassDescriptor: GPURenderPassDescriptor = {
+            colorAttachments: [],
+            depthStencilAttachment: {
+                view: pipelineObj.shadowDepthView,
+                depthClearValue: 1.0,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+            }
+        }
         const shadowPass = commandEncoder.beginRenderPass(shadowPassDescriptor)
         shadowPass.setPipeline(pipelineObj.shadowPipeline)
         shadowPass.setBindGroup(0, pipelineObj.shadowGroup)
+        // set box vertex
         shadowPass.setVertexBuffer(0, pipelineObj.boxBuffer.vertex)
         shadowPass.setIndexBuffer(pipelineObj.boxBuffer.index, 'uint16')
         shadowPass.drawIndexed(box.indexCount, 2, 0, 0, 0)
+        // set sphere vertex
         shadowPass.setVertexBuffer(0, pipelineObj.sphereBuffer.vertex)
         shadowPass.setIndexBuffer(pipelineObj.sphereBuffer.index, 'uint16')
-        shadowPass.drawIndexed(sphere.indexCount, NUM - 2 , 0, 0, NUM / 2)
+        shadowPass.drawIndexed(sphere.indexCount, NUM - 2, 0, 0, NUM / 2)
         shadowPass.end()
     }
     // start renderPass
     {
+        const renderPassDescriptor: GPURenderPassDescriptor = {
+            colorAttachments: [
+                {
+                    view: context.getCurrentTexture().createView(),
+                    clearValue: { r: 0, g: 0, b: 0, a: 1.0 },
+                    loadOp: 'clear',
+                    storeOp: 'store'
+                }
+            ],
+            depthStencilAttachment: {
+                view: pipelineObj.renderDepthView,
+                depthClearValue: 1.0,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+            }
+        }
         const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
         passEncoder.setPipeline(pipelineObj.renderPipeline)
         passEncoder.setBindGroup(0, pipelineObj.vsGroup)
@@ -315,7 +318,7 @@ function draw(
         // set sphere vertex
         passEncoder.setVertexBuffer(0, pipelineObj.sphereBuffer.vertex)
         passEncoder.setIndexBuffer(pipelineObj.sphereBuffer.index, 'uint16')
-        passEncoder.drawIndexed(sphere.indexCount, NUM - 2 , 0, 0, NUM / 2)
+        passEncoder.drawIndexed(sphere.indexCount, NUM - 2, 0, 0, NUM / 2)
         passEncoder.end()
     }
     // webgpu run in a separate process, all the commands will be executed after submit
@@ -324,56 +327,56 @@ function draw(
 
 // total objects
 const NUM = 30
-async function run(){
+async function run() {
     const canvas = document.querySelector('canvas')
     if (!canvas)
         throw new Error('No Canvas')
-    
-    const {device, context, format, size} = await initWebGPU(canvas)
+
+    const { device, context, format, size } = await initWebGPU(canvas)
     const pipelineObj = await initPipeline(device, format, size)
     // create objects
-    const scene:any[] = []
+    const scene: any[] = []
     const modelViewMatrix = new Float32Array(NUM * 4 * 4)
     const colorBuffer = new Float32Array(NUM * 4)
     // add a center box
     {
-        const position = {x:0, y:0, z:-20}
-        const rotation = {x:0, y: Math.PI / 4, z:0}
-        const scale = {x:2, y: 20, z: 2}
+        const position = { x: 0, y: 0, z: -20 }
+        const rotation = { x: 0, y: Math.PI / 4, z: 0 }
+        const scale = { x: 2, y: 20, z: 2 }
         const modelView = getModelViewMatrix(position, rotation, scale)
-        modelViewMatrix.set(modelView, 0*4*4)
+        modelViewMatrix.set(modelView, 0 * 4 * 4)
         // random color for each object
         colorBuffer.set([0.5, 0.5, 0.5, 1], 0 * 4)
-        scene.push({position, rotation, scale})
+        scene.push({ position, rotation, scale })
     }
     // add a floor
     {
-        const position = {x:0, y:-10, z:-20}
-        const rotation = {x:0, y:0, z:0}
-        const scale = {x:50, y: 0.5, z: 40}
+        const position = { x: 0, y: -10, z: -20 }
+        const rotation = { x: 0, y: 0, z: 0 }
+        const scale = { x: 50, y: 0.5, z: 40 }
         const modelView = getModelViewMatrix(position, rotation, scale)
-        modelViewMatrix.set(modelView, 1*4*4)
+        modelViewMatrix.set(modelView, 1 * 4 * 4)
         // random color for each object
         colorBuffer.set([1, 1, 1, 1], 1 * 4)
-        scene.push({position, rotation, scale})
+        scene.push({ position, rotation, scale })
     }
     // add spheres
-    for(let i = 2; i < NUM; i++){
+    for (let i = 2; i < NUM; i++) {
         // craete simple object
         const or = Math.random() > 0.5 ? 1 : -1
-        const position = {x: (1 + Math.random() * 12) * or, y: - 8 + Math.random() * 15, z: -20 + (1 + Math.random() * 12) * or}
-        const rotation = {x: Math.random(), y: Math.random(), z: Math.random()}
+        const position = { x: (1 + Math.random() * 12) * or, y: - 8 + Math.random() * 15, z: -20 + (1 + Math.random() * 12) * or }
+        const rotation = { x: Math.random(), y: Math.random(), z: Math.random() }
         const s = Math.max(0.5, Math.random())
-        const scale = {x:s, y:s, z:s}
+        const scale = { x: s, y: s, z: s }
         const modelView = getModelViewMatrix(position, rotation, scale)
         modelViewMatrix.set(modelView, i * 4 * 4)
         // random color for each object
         colorBuffer.set([Math.random(), Math.random(), Math.random(), 1], i * 4)
-        scene.push({position, rotation, scale, y:position.y, v: Math.max(0.09, Math.random() / 10) * or})
+        scene.push({ position, rotation, scale, y: position.y, v: Math.max(0.09, Math.random() / 10) * or })
     }
     // write matrix & colors
     device.queue.writeBuffer(pipelineObj.colorBuffer, 0, colorBuffer)
-    
+
     // dir light, 4 position
     const lightViewMatrix = mat4.create()
     const lightProjectionMatrix = mat4.create()
@@ -381,15 +384,15 @@ async function run(){
     const up = vec3.fromValues(0, 1, 0)
     const origin = vec3.fromValues(0, 0, 0)
     // start loop
-    function frame(){
+    function frame() {
         // update lights position
         const now = performance.now()
         lightPosition[0] = Math.sin(now / 1500) * 50
         lightPosition[2] = Math.cos(now / 1500) * 50
         // update lvp matrix
         mat4.lookAt(
-            lightViewMatrix, 
-            lightPosition, 
+            lightViewMatrix,
+            lightPosition,
             origin, up
         )
         mat4.ortho(lightProjectionMatrix, -80, 80, -80, 80, -200, 200)
@@ -397,10 +400,10 @@ async function run(){
         device.queue.writeBuffer(pipelineObj.lightProjectionBuffer, 0, lightProjectionMatrix as Float32Array)
         device.queue.writeBuffer(pipelineObj.lightBuffer, 0, lightPosition as Float32Array)
         // update obj position
-        for(let i = 2; i < NUM; i++){
+        for (let i = 2; i < NUM; i++) {
             const obj = scene[i]
             obj.position.y += obj.v
-            if(obj.position.y < -9 || obj.position.y > 9)
+            if (obj.position.y < -9 || obj.position.y > 9)
                 obj.v *= -1
             const modelView = getModelViewMatrix(obj.position, obj.rotation, obj.scale)
             modelViewMatrix.set(modelView, i * 4 * 4)
@@ -413,14 +416,14 @@ async function run(){
     }
     frame()
 
-    function updateCamera(){
+    function updateCamera() {
         const aspect = size.width / size.height
-        const projectionMatrix = getProjectionMatrix(aspect, 60 / 180 * Math.PI, 0.1, 1000, {x:0, y: 10, z:20})
+        const projectionMatrix = getProjectionMatrix(aspect, 60 / 180 * Math.PI, 0.1, 1000, { x: 0, y: 10, z: 20 })
         device.queue.writeBuffer(pipelineObj.cameraProjectionBuffer, 0, projectionMatrix)
     }
     updateCamera()
     // re-configure context on resize
-    window.addEventListener('resize', ()=>{
+    window.addEventListener('resize', () => {
         size.width = canvas.width = canvas.clientWidth * devicePixelRatio
         size.height = canvas.height = canvas.clientHeight * devicePixelRatio
         // don't need to recall context.configure() after v104

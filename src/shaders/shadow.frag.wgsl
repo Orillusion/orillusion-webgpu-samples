@@ -18,16 +18,15 @@ fn main(
     // apply Percentage-closer filtering (PCF)
     // sample nearest 9 texels to smooth result
     let size = f32(textureDimensions(shadowMap).x);
-    let oneOverSize = 1.0 / size;
     for (var y : i32 = -1 ; y <= 1 ; y = y + 1) {
         for (var x : i32 = -1 ; x <= 1 ; x = x + 1) {
-            let offset : vec2<f32> = vec2<f32>(
-            f32(x) * oneOverSize,
-            f32(y) * oneOverSize);
-
+            let offset = vec2<f32>(f32(x) / size, f32(y) / size);
             shadow = shadow + textureSampleCompare(
-            shadowMap, shadowSampler,
-            shadowPos.xy + offset, shadowPos.z - 0.005); // apply a small bias to avoid acne
+                shadowMap, 
+                shadowSampler,
+                shadowPos.xy + offset, 
+                shadowPos.z - 0.005  // apply a small bias to avoid acne
+            );
         }
     }
     shadow = shadow / 9.0;
