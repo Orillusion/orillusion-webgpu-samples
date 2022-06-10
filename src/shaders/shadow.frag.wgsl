@@ -13,7 +13,7 @@ fn main(
     let objectColor = fragColor.rgb;
     // Directional Light
     let diffuse: f32 = max(dot(normalize(lightPosition.xyz), fragNormal), 0.0);
-    // add shadow
+    // add shadow factor
     var shadow : f32 = 0.0;
     // apply Percentage-closer filtering (PCF)
     // sample nearest 9 texels to smooth result

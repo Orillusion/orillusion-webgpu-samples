@@ -63,6 +63,25 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
         depthCompare: 'less',
         format: 'depth32float',
     }
+    const shadowPipeline = await device.createRenderPipelineAsync({
+        label: 'Shadow Pipline',
+        layout: 'auto',
+        vertex: {
+            module: device.createShaderModule({
+                code: shadowDepth,
+            }),
+            entryPoint: 'main',
+            buffers: vertexBuffers
+        },
+        primitive, depthStencil
+    } as GPURenderPipelineDescriptor)
+    // create a depthTexture for shadow
+    const shadowDepthTexture = device.createTexture({
+        size: [2048, 2048],
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+        format: 'depth32float',
+    });
+    const shadowDepthView = shadowDepthTexture.createView()
     const renderPipeline = await device.createRenderPipelineAsync({
         label: 'Render Pipline',
         layout: 'auto',
@@ -86,31 +105,12 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
         },
         primitive, depthStencil
     } as GPURenderPipelineDescriptor)
-    const shadowPipeline = await device.createRenderPipelineAsync({
-        label: 'Shadow Pipline',
-        layout: 'auto',
-        vertex: {
-            module: device.createShaderModule({
-                code: shadowDepth,
-            }),
-            entryPoint: 'main',
-            buffers: vertexBuffers
-        },
-        primitive, depthStencil
-    } as GPURenderPipelineDescriptor)
     // create depthTexture for renderPass
     const renderDepthTexture = device.createTexture({
         size, format: 'depth32float',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     })
     const renderDepthView = renderDepthTexture.createView()
-    // create a depthTexture for shadow
-    const shadowDepthTexture = device.createTexture({
-        size: [2048, 2048, 1],
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-        format: 'depth32float',
-    });
-    const shadowDepthView = shadowDepthTexture.createView()
     // create vertex & index buffer
     const boxBuffer = {
         vertex: device.createBuffer({
@@ -395,7 +395,7 @@ async function run() {
             lightPosition,
             origin, up
         )
-        mat4.ortho(lightProjectionMatrix, -80, 80, -80, 80, -200, 200)
+        mat4.ortho(lightProjectionMatrix, -40, 40, -40, 40, -50, 200)
         mat4.multiply(lightProjectionMatrix, lightProjectionMatrix, lightViewMatrix)
         device.queue.writeBuffer(pipelineObj.lightProjectionBuffer, 0, lightProjectionMatrix as Float32Array)
         device.queue.writeBuffer(pipelineObj.lightBuffer, 0, lightPosition as Float32Array)

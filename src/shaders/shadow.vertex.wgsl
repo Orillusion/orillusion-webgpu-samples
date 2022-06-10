@@ -20,18 +20,18 @@ fn main(
     @location(2) uv : vec2<f32>
 ) -> VertexOutput {
     let modelview = modelViews[index];
-    let mvp = cameraProjection * modelview;
     let pos = vec4<f32>(position, 1.0);
-    let posFromLight: vec4<f32> = lightProjection * modelview * pos;
-    let posFromCamera: vec4<f32> = mvp * pos;
-    
+    let posFromCamera: vec4<f32> = cameraProjection * modelview * pos;
+
     var output : VertexOutput;
     output.Position = posFromCamera;
-    // Convert shadowPos XY to (0, 1) to fit texture UV
-    output.shadowPos = vec3<f32>(posFromLight.xy * vec2<f32>(0.5, -0.5) + vec2<f32>(0.5, 0.5), posFromLight.z);
     output.fragPosition = (modelview * pos).xyz;
     output.fragNormal =  (modelview * vec4<f32>(normal, 0.0)).xyz;
     output.fragUV = uv;
     output.fragColor = colors[index];
+
+    let posFromLight: vec4<f32> = lightProjection * modelview * pos;
+    // Convert shadowPos XY to (0, 1) to fit texture UV
+    output.shadowPos = vec3<f32>(posFromLight.xy * vec2<f32>(0.5, -0.5) + vec2<f32>(0.5, 0.5), posFromLight.z);
     return output;
 }
