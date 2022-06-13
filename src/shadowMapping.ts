@@ -79,9 +79,8 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
     const shadowDepthTexture = device.createTexture({
         size: [2048, 2048],
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-        format: 'depth32float',
+        format: 'depth32float'
     });
-    const shadowDepthView = shadowDepthTexture.createView()
     const renderPipeline = await device.createRenderPipelineAsync({
         label: 'Render Pipline',
         layout: 'auto',
@@ -108,8 +107,10 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size: {
     // create depthTexture for renderPass
     const renderDepthTexture = device.createTexture({
         size, format: 'depth32float',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT
     })
+    // create depthTextureView
+    const shadowDepthView = shadowDepthTexture.createView()
     const renderDepthView = renderDepthTexture.createView()
     // create vertex & index buffer
     const boxBuffer = {
@@ -307,19 +308,19 @@ function draw(
                 depthStoreOp: 'store',
             }
         }
-        const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
-        passEncoder.setPipeline(pipelineObj.renderPipeline)
-        passEncoder.setBindGroup(0, pipelineObj.vsGroup)
-        passEncoder.setBindGroup(1, pipelineObj.fsGroup)
+        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor)
+        renderPass.setPipeline(pipelineObj.renderPipeline)
+        renderPass.setBindGroup(0, pipelineObj.vsGroup)
+        renderPass.setBindGroup(1, pipelineObj.fsGroup)
         // set box vertex
-        passEncoder.setVertexBuffer(0, pipelineObj.boxBuffer.vertex)
-        passEncoder.setIndexBuffer(pipelineObj.boxBuffer.index, 'uint16')
-        passEncoder.drawIndexed(box.indexCount, 2, 0, 0, 0)
+        renderPass.setVertexBuffer(0, pipelineObj.boxBuffer.vertex)
+        renderPass.setIndexBuffer(pipelineObj.boxBuffer.index, 'uint16')
+        renderPass.drawIndexed(box.indexCount, 2, 0, 0, 0)
         // set sphere vertex
-        passEncoder.setVertexBuffer(0, pipelineObj.sphereBuffer.vertex)
-        passEncoder.setIndexBuffer(pipelineObj.sphereBuffer.index, 'uint16')
-        passEncoder.drawIndexed(sphere.indexCount, NUM - 2, 0, 0, NUM / 2)
-        passEncoder.end()
+        renderPass.setVertexBuffer(0, pipelineObj.sphereBuffer.vertex)
+        renderPass.setIndexBuffer(pipelineObj.sphereBuffer.index, 'uint16')
+        renderPass.drawIndexed(sphere.indexCount, NUM - 2, 0, 0, NUM / 2)
+        renderPass.end()
     }
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])
