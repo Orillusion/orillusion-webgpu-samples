@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orillusion | GPU Compute</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
+            display: flex;
+            text-align: center;
+            flex-direction: column;
+            justify-content: center;
+            font-family: Avenir,Helvetica,Arial,sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        p{
+            font-size: 14px;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h2>Matrix Multiply Benchmark</h2>
+    <select id="select" style="width:150px;height:2em;margin: 2em auto">
+        <option value="10000">1w</option>
+        <option value="100000">10w</option>
+        <option value="500000">50w</option>
+        <option value="1000000" selected>100w</option>
+        <option value="5000000">500w</option>
+    </select>
+    <p>JS CPU: <span id="cpu">-</span> ms (Average of 10x)</p>
+    <p>WebGPU: <span id="gpu">-</span> ms (Average of 100x)</p>
+    <button style="width:150px;height:2em;margin: 2em auto 0 auto">Run</button>
+    <script type="module" src="/src/gpuCompute.ts"></script>
+</body>
+</html>

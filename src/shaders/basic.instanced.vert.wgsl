@@ -1,9 +1,10 @@
-@binding(0) @group(0) var<storage> mvpMatrix : array<mat4x4<f32>>;
+@binding(0) @group(0) var<storage, read> mvpMatrix : array<mat4x4<f32>>;
 
 struct VertexOutput {
     @builtin(position) Position : vec4<f32>,
     @location(0) fragUV : vec2<f32>,
     @location(1) fragPosition: vec4<f32>
+
 };
 
 @stage(vertex)
