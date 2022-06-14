@@ -25,10 +25,25 @@
            width: 100%;
            height: 100%; 
         }
+        input {
+            width: 50%;
+            position: fixed;
+            bottom: 50px;
+            left:0;right:0;
+            margin:auto;
+        }
+        span#num{
+            position: fixed;
+            bottom: 70px;
+            left:0;right:0;
+            margin:auto;
+        }
     </style>
 </head>
 <body>
     <canvas></canvas>
+    <span id="num">150000</span>
+    <input type="range" min="10000" max="300000" step="1000" value="150000"/>
     <script type="module" src="/src/gpuParticles.ts"></script>
 </body>
 </html>

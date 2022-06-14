@@ -249,7 +249,7 @@ function draw(
 }
 
 // total objects
-const NUM = 200000
+let NUM = 150000
 async function run(){
     const canvas = document.querySelector('canvas')
     if (!canvas)
@@ -306,6 +306,12 @@ async function run(){
         pipelineObj.depthView = pipelineObj.depthTexture.createView()
         // update aspect
         aspect = size.width/ size.height
+    })
+
+    document.querySelector('input')?.addEventListener('input', (e:Event)=>{
+        NUM = +(e.target as HTMLInputElement).value
+        const span = document.querySelector('#num') as HTMLSpanElement
+        span.innerHTML = NUM.toString()
     })
 }
 run()
