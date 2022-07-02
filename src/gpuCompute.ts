@@ -28,28 +28,32 @@ async function initPipeline(device: GPUDevice, matrixBuffer:Float32Array, projec
         }
     }
     const pipeline = await device.createComputePipelineAsync(descriptor)
-    // papare gpu buffer
+    // papare gpu buffers
+    // hold nx4x4 modelView matrix buffer
     const modelBuffer = device.createBuffer({
         size: matrixBuffer.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
     device.queue.writeBuffer(modelBuffer, 0, matrixBuffer)
+    // hold a 4x4 projection buffer
     const projectionBuffer = device.createBuffer({
         size: projection.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
     device.queue.writeBuffer(projectionBuffer, 0, projection)
+    // create a n*4x4 matrix buffer to hold result
     const mvpBuffer = device.createBuffer({
         size: matrixBuffer.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     })
+    // indicate the size of total matrix
     const countBuffer = device.createBuffer({
-        size: 4,
+        size: 4, // just one uint32 number
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     })
     device.queue.writeBuffer(countBuffer, 0, new Uint32Array([NUM]))
     
-    // create a bindGroup to hold three buffers
+    // create a bindGroup to hold 4 buffers
     const bindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [{
@@ -82,8 +86,8 @@ async function run(){
     button.disabled = true
     await new Promise(res=>setTimeout(res))
     // papare data
-    const matrixBuffer = new Float32Array(NUM * 4 * 4) // for gpu
-    const matrixArray = [] // for cpu
+    const matrixBuffer = new Float32Array(NUM * 4 * 4) // hold gpu matrix
+    const matrixArray = [] // hold cpu matrix
     const projection = mat4.create() as Float32Array// fake projection matrix
     for(let i = 0; i < NUM; i++){
         const fakeMatrix = mat4.create()
@@ -121,11 +125,11 @@ async function run(){
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
     })
     // copy and mapAsync will be done after CS pipline
-    console.time('gpu multiply x100')
     start = performance.now()
     const commandEncoder = device.createCommandEncoder()
     commandEncoder.copyBufferToBuffer(mvpBuffer, 0, readBuffer, 0, matrixBuffer.byteLength)
     device.queue.submit([commandEncoder.finish()])
+    console.time('gpu multiply x100')
     await readBuffer.mapAsync(GPUMapMode.READ)
     gpu.innerHTML = ((performance.now() - start) / 100).toFixed(2)
     console.timeEnd('gpu multiply x100')

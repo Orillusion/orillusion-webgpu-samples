@@ -136,8 +136,8 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
     const inputBuffer = device.createBuffer({
-        label: 'GPUBuffer store camera projection',
-        size: 10 * 4, // float32 * 10
+        label: 'GPUBuffer store input vars',
+        size: 7 * 4, // float32 * 7
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
 
@@ -265,7 +265,7 @@ async function run(){
         const x = Math.random() * 1000 - 500
         const y = Math.random() * 500 - 250
         const z = Math.random() * 1000 - 500
-        const modelMatrix = getModelViewMatrix({x,y,z})
+        const modelMatrix = getModelViewMatrix({x,y,z},{x:0,y:0,z:0},{x:2,y:2,z:2})
         modelArray.set(modelMatrix, i * 4 * 4)
 
         velocityArray[i * 4 + 0] = Math.random() - 0.5 // x
