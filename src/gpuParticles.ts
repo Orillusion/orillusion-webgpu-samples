@@ -8,12 +8,18 @@ import { getModelViewMatrix, getProjectionMatrix } from './util/math'
 async function initWebGPU(canvas: HTMLCanvasElement) {
     if(!navigator.gpu)
         throw new Error('Not Support WebGPU')
-    const adapter = await navigator.gpu.requestAdapter()
+    const adapter = await navigator.gpu.requestAdapter({
+        powerPreference: 'high-performance'
+    })
     if (!adapter)
         throw new Error('No Adapter Found')
-    const device = await adapter.requestDevice()
+    const device = await adapter.requestDevice({
+        requiredLimits: {
+            maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize
+        }
+    })
     const context = canvas.getContext('webgpu') as GPUCanvasContext
-    const format = navigator.gpu.getPreferredCanvasFormat ? navigator.gpu.getPreferredCanvasFormat() : context.getPreferredFormat(adapter)
+    const format = navigator.gpu.getPreferredCanvasFormat()
     const devicePixelRatio = window.devicePixelRatio || 1
     canvas.width = canvas.clientWidth * devicePixelRatio
     canvas.height = canvas.clientHeight * devicePixelRatio
@@ -116,8 +122,8 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
     device.queue.writeBuffer(indexBuffer, 0, box.index)
     
     const modelBuffer = device.createBuffer({
-        label: 'GPUBuffer store NUM model matrix',
-        size: 4 * 4 * 4 * NUM, // mat4x4 x float32 x NUM
+        label: 'GPUBuffer store MAX model matrix',
+        size: 4 * 4 * 4 * MAX, // mat4x4 x float32 x MAX
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
     const projectionBuffer = device.createBuffer({
@@ -126,13 +132,13 @@ async function initPipeline(device: GPUDevice, format: GPUTextureFormat, size:{w
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     })
     const mvpBuffer = device.createBuffer({
-        label: 'GPUBuffer store NUM MVP',
-        size: 4 * 4 * 4 * NUM, // mat4x4 x float32 x NUM
+        label: 'GPUBuffer store MAX MVP',
+        size: 4 * 4 * 4 * MAX, // mat4x4 x float32 x MAX
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
     const velocityBuffer = device.createBuffer({
-        label: 'GPUBuffer store NUM velocity',
-        size: 4 * 4 * NUM, // 4 position x float32 x NUM
+        label: 'GPUBuffer store MAX velocity',
+        size: 4 * 4 * MAX, // 4 position x float32 x MAX
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
     const inputBuffer = device.createBuffer({
@@ -249,7 +255,7 @@ function draw(
 }
 
 // total objects
-let NUM = 150000
+let NUM = 150000, MAX = 300000
 async function run(){
     const canvas = document.querySelector('canvas')
     if (!canvas)
@@ -259,9 +265,9 @@ async function run(){
     const pipelineObj = await initPipeline(device, format, size)
     // create data
     const inputArray = new Float32Array([NUM, -500, 500, -250, 250, -500, 500]) // count, xmin/max, ymin/max, zmin/max
-    const modelArray = new Float32Array(NUM * 4 * 4)
-    const velocityArray = new Float32Array(NUM * 4)
-    for(let i = 0; i < NUM; i++){
+    const modelArray = new Float32Array(MAX * 4 * 4)
+    const velocityArray = new Float32Array(MAX * 4)
+    for(let i = 0; i < MAX; i++){
         const x = Math.random() * 1000 - 500
         const y = Math.random() * 500 - 250
         const z = Math.random() * 1000 - 500
@@ -308,10 +314,15 @@ async function run(){
         aspect = size.width/ size.height
     })
 
-    document.querySelector('input')?.addEventListener('input', (e:Event)=>{
+    const range = document.querySelector('input') as HTMLInputElement
+    range.max = MAX.toString()
+    range.value = NUM.toString()
+    range.addEventListener('input', (e:Event)=>{
         NUM = +(e.target as HTMLInputElement).value
         const span = document.querySelector('#num') as HTMLSpanElement
         span.innerHTML = NUM.toString()
+        inputArray[0] = NUM
+        device.queue.writeBuffer(pipelineObj.inputBuffer, 0, inputArray)
     })
 }
 run()
