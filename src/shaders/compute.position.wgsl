@@ -2,7 +2,7 @@
 @group(0) @binding(1) var<storage, read_write> velocity: array<vec4<f32>>;
 @group(0) @binding(2) var<storage, read_write> modelView: array<mat4x4<f32>>;
 @group(0) @binding(3) var<uniform> projection : mat4x4<f32>;
-@group(0) @binding(4) var<storage, write> mvp : array<mat4x4<f32>>;
+@group(0) @binding(4) var<storage, read_write> mvp : array<mat4x4<f32>>;
 
 let size = u32(128);
 @stage(compute) @workgroup_size(size)
