@@ -6,7 +6,6 @@ async function initWebGPU(){
     throw new Error('Not Support WebGPU')
     const adapter = await navigator.gpu.requestAdapter({
         powerPreference: 'high-performance'
-        // powerPreference: 'low-power'
     })
     if (!adapter)
         throw new Error('No Adapter Found')
@@ -34,7 +33,9 @@ async function initPipeline(device: GPUDevice, matrixBuffer:Float32Array, projec
         size: matrixBuffer.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
+    console.time('writeBuffer')
     device.queue.writeBuffer(modelBuffer, 0, matrixBuffer)
+    console.timeEnd('writeBuffer')
     // hold a 4x4 projection buffer
     const projectionBuffer = device.createBuffer({
         size: projection.byteLength,
@@ -84,6 +85,7 @@ async function run(){
     cpu.innerHTML = gpu.innerHTML = '-'
     button.innerHTML = 'Testing ...'
     button.disabled = true
+    // small delay for rendering UI
     await new Promise(res=>setTimeout(res))
     // papare data
     const matrixBuffer = new Float32Array(NUM * 4 * 4) // hold gpu matrix
@@ -109,34 +111,37 @@ async function run(){
     // papare gpu
     const device = await initWebGPU()
     const {pipeline, bindGroup, mvpBuffer} = await initPipeline(device, matrixBuffer, projection)
-    // run test
-    for(let i = 0; i < 100; i++){
-        const commandEncoder = device.createCommandEncoder()
+    // papare a read buffer to map mvp back to js
+    const readBuffer = device.createBuffer({
+        size: matrixBuffer.byteLength,
+        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+    })
+    // run test x300
+    const commandEncoder = device.createCommandEncoder()
+    for(let i = 0; i < 300; i++){
         const computePass = commandEncoder.beginComputePass()
         computePass.setPipeline(pipeline)
         computePass.setBindGroup(0, bindGroup)
         computePass.dispatchWorkgroups(Math.ceil(NUM / 128))
         computePass.end()
-        device.queue.submit([commandEncoder.finish()])
     }
-    // create a read buffer to map mvp back to js
-    const readBuffer = device.createBuffer({
-        size: matrixBuffer.byteLength,
-        usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
-    })
-    // copy and mapAsync will be done after CS pipline
-    start = performance.now()
-    const commandEncoder = device.createCommandEncoder()
+    // copy mvpBuffer will be done after all computePasses
     commandEncoder.copyBufferToBuffer(mvpBuffer, 0, readBuffer, 0, matrixBuffer.byteLength)
     device.queue.submit([commandEncoder.finish()])
-    console.time('gpu multiply x100')
+    // compute time by mapAsync
+    console.time('gpu multiply x300')
+    start = performance.now()
+    // map readBuffer from GPU to CPU/JS
     await readBuffer.mapAsync(GPUMapMode.READ)
-    gpu.innerHTML = ((performance.now() - start) / 100).toFixed(2)
-    console.timeEnd('gpu multiply x100')
+    gpu.innerHTML = ((performance.now() - start) / 300).toFixed(2)
+    console.timeEnd('gpu multiply x300')
+    // transfor buffer to JS object
     const copyArrayBuffer = readBuffer.getMappedRange()
     const result = new Float32Array(copyArrayBuffer)
     console.log(result)
+    // unmap GPU buffer and release CPU/JS buffer
     readBuffer.unmap()
+    // reset UI
     button.disabled = false
     button.innerHTML = 'Run'
 }

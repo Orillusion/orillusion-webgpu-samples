@@ -7,8 +7,7 @@
 let size = u32(128);
 @stage(compute) @workgroup_size(size)
 fn main(
-    @builtin(global_invocation_id) GlobalInvocationID : vec3<u32>,
-    @builtin(num_workgroups) GroupSize: vec3<u32>
+    @builtin(global_invocation_id) GlobalInvocationID : vec3<u32>
 ) {
     var index = GlobalInvocationID.x;
     if(index >= u32(input[0])){

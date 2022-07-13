@@ -314,7 +314,7 @@ async function run(){
         // update lights position & config to GPU
         device.queue.writeBuffer(pipelineObj.ambientBuffer, 0, ambient)
         device.queue.writeBuffer(pipelineObj.pointBuffer, 0, pointLight)
-
+        device.queue.writeBuffer(pipelineObj.directionalBuffer, 0, directionalLight)
         draw(device, context, pipelineObj)
         requestAnimationFrame(frame)
     }
