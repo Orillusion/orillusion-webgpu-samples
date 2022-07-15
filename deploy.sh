@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 rm -rf dist
-npm run build:github
+npm run build
 
 cd dist
 
