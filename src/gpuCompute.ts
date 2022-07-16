@@ -16,7 +16,7 @@ async function initWebGPU(){
     })
     return device
 }
-async function initPipeline(device: GPUDevice, matrixBuffer:Float32Array, projection:Float32Array){
+async function initPipeline(device: GPUDevice, modelMatrix:Float32Array, projection:Float32Array){
     const descriptor: GPUComputePipelineDescriptor = {
         layout: 'auto',
         compute: {
@@ -30,11 +30,11 @@ async function initPipeline(device: GPUDevice, matrixBuffer:Float32Array, projec
     // papare gpu buffers
     // hold nx4x4 modelView matrix buffer
     const modelBuffer = device.createBuffer({
-        size: matrixBuffer.byteLength,
+        size: modelMatrix.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     })
     console.time('writeBuffer')
-    device.queue.writeBuffer(modelBuffer, 0, matrixBuffer)
+    device.queue.writeBuffer(modelBuffer, 0, modelMatrix)
     console.timeEnd('writeBuffer')
     // hold a 4x4 projection buffer
     const projectionBuffer = device.createBuffer({
@@ -44,7 +44,7 @@ async function initPipeline(device: GPUDevice, matrixBuffer:Float32Array, projec
     device.queue.writeBuffer(projectionBuffer, 0, projection)
     // create a n*4x4 matrix buffer to hold result
     const mvpBuffer = device.createBuffer({
-        size: matrixBuffer.byteLength,
+        size: modelMatrix.byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     })
     // indicate the size of total matrix
@@ -88,13 +88,13 @@ async function run(){
     // small delay for rendering UI
     await new Promise(res=>setTimeout(res))
     // papare data
-    const matrixBuffer = new Float32Array(NUM * 4 * 4) // hold gpu matrix
+    const fakeMatrix = mat4.create()
+    const modelMatrix = new Float32Array(NUM * 4 * 4) // hold gpu matrix
     const matrixArray = [] // hold cpu matrix
-    const projection = mat4.create() as Float32Array// fake projection matrix
+    const projection = fakeMatrix as Float32Array// fake projection matrix
     for(let i = 0; i < NUM; i++){
-        const fakeMatrix = mat4.create()
         matrixArray.push(fakeMatrix)
-        matrixBuffer.set(fakeMatrix, i * 4 * 4)
+        modelMatrix.set(fakeMatrix, i * 4 * 4)
     }
 
     // start test cpu time
@@ -110,10 +110,10 @@ async function run(){
 
     // papare gpu
     const device = await initWebGPU()
-    const {pipeline, bindGroup, mvpBuffer} = await initPipeline(device, matrixBuffer, projection)
+    const {pipeline, bindGroup, mvpBuffer} = await initPipeline(device, modelMatrix, projection)
     // papare a read buffer to map mvp back to js
     const readBuffer = device.createBuffer({
-        size: matrixBuffer.byteLength,
+        size: modelMatrix.byteLength,
         usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
     })
     // run test x300
@@ -126,7 +126,7 @@ async function run(){
         computePass.end()
     }
     // copy mvpBuffer will be done after all computePasses
-    commandEncoder.copyBufferToBuffer(mvpBuffer, 0, readBuffer, 0, matrixBuffer.byteLength)
+    commandEncoder.copyBufferToBuffer(mvpBuffer, 0, readBuffer, 0, modelMatrix.byteLength)
     device.queue.submit([commandEncoder.finish()])
     // compute time by mapAsync
     console.time('gpu multiply x300')

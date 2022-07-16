@@ -48,8 +48,9 @@ fn main(
         pos.z = zMax;
         vel.z = -vel.z;
     }
-    // update position & velocity
+    // update velocity
     velocity[index] = vel;
+    // update position in modelView matrix
     modelView[index][3] = pos;
     // update mvp
     mvp[index] = projection * modelView[index];
