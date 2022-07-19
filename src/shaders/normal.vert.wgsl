@@ -10,7 +10,7 @@ struct VertexOutput {
     @location(3) fragColor: vec4<f32>
 };
 
-@stage(vertex)
+@vertex
 fn main(
     @builtin(instance_index) index : u32,
     @location(0) position : vec3<f32>,

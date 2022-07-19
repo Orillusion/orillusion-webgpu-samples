@@ -2,7 +2,7 @@
 @group(1) @binding(1) var<uniform> pointLight : array<vec4<f32>, 2>;
 @group(1) @binding(2) var<uniform> directionLight : array<vec4<f32>, 2>;
 
-@stage(fragment)
+@fragment
 fn main(
     @location(0) fragPosition : vec3<f32>,
     @location(1) fragNormal: vec3<f32>,

@@ -6,7 +6,7 @@ struct VertexOutput {
     @location(1) fragPosition: vec4<f32>
 };
 
-@stage(vertex)
+@vertex
 fn main(
     @location(0) position : vec4<f32>,
     @location(1) uv : vec2<f32>
