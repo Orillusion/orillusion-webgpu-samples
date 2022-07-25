@@ -7,7 +7,7 @@ struct VertexOutput {
 
 };
 
-@stage(vertex)
+@vertex
 fn main(
     @builtin(instance_index) index : u32,
     @location(0) position : vec4<f32>,

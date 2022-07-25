@@ -1,7 +1,7 @@
 @group(0) @binding(0) var<storage> modelViews : array<mat4x4<f32>>;
 @group(0) @binding(1) var<uniform> lightProjection : mat4x4<f32>;
 
-@stage(vertex)
+@vertex
 fn main(
     @builtin(instance_index) index : u32,
     @location(0) position : vec3<f32>,
