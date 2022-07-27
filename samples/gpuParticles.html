@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orillusion | Particles</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
+            display: flex;
+            text-align: center;
+            flex-direction: column;
+            justify-content: center;
+        }
+        p{
+            font-size: 14px;
+            margin:0
+        }
+        canvas {
+           width: 100%;
+           height: 100%; 
+        }
+        input {
+            width: 50%;
+            position: fixed;
+            bottom: 50px;
+            left:0;right:0;
+            margin:auto;
+        }
+        span#num{
+            position: fixed;
+            bottom: 70px;
+            left:0;right:0;
+            margin:auto;
+        }
+    </style>
+  <script type="module" crossorigin src="/orillusion-webgpu-samples/assets/gpuParticles.8caa96d0.js"></script>
+  <link rel="modulepreload" crossorigin href="/orillusion-webgpu-samples/assets/modulepreload-polyfill.b7f2da20.js">
+  <link rel="modulepreload" crossorigin href="/orillusion-webgpu-samples/assets/basic.instanced.vert.c5f7cc12.js">
+  <link rel="modulepreload" crossorigin href="/orillusion-webgpu-samples/assets/position.frag.e3ecd7bf.js">
+  <link rel="modulepreload" crossorigin href="/orillusion-webgpu-samples/assets/box.c678a105.js">
+  <link rel="modulepreload" crossorigin href="/orillusion-webgpu-samples/assets/mat4.f7fc816f.js">
+  <link rel="modulepreload" crossorigin href="/orillusion-webgpu-samples/assets/math.c29ca26c.js">
+</head>
+<body>
+    <canvas></canvas>
+    <span id="num">150000</span>
+    <input type="range" min="10000" max="300000" step="1000" value="150000"/>
+    
+</body>
+</html>
