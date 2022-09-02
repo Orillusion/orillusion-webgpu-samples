@@ -2,7 +2,7 @@
 @group(1) @binding(1) var shadowMap: texture_depth_2d;
 @group(1) @binding(2) var shadowSampler: sampler_comparison;
 
-@stage(fragment)
+@fragment
 fn main(
     @location(0) fragPosition : vec3<f32>,
     @location(1) fragNormal: vec3<f32>,

@@ -4,8 +4,8 @@
 @group(0) @binding(3) var<uniform> projection : mat4x4<f32>;
 @group(0) @binding(4) var<storage, read_write> mvp : array<mat4x4<f32>>;
 
-let size = u32(128);
-@stage(compute) @workgroup_size(size)
+const size = u32(128);
+@compute @workgroup_size(size)
 fn main(
     @builtin(global_invocation_id) GlobalInvocationID : vec3<u32>
 ) {
