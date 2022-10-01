@@ -121,13 +121,13 @@ function draw(
     renderBundle: Iterable<GPURenderBundle>
 ) {
     const commandEncoder = device.createCommandEncoder()
-    console.time('executeBundles')
+    // console.time('executeBundles')
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor)
     // execute bundles, could save over 10X CPU time
     // but won't help with GPU time
     passEncoder.executeBundles(renderBundle)
     passEncoder.end()
-    console.timeEnd('executeBundles')
+    // console.timeEnd('executeBundles')
     // webgpu run in a separate process, all the commands will be executed after submit
     device.queue.submit([commandEncoder.finish()])
 }
