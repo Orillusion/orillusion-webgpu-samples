@@ -189,10 +189,14 @@ async function run() {
     const rotation = { x: 0, y: 0, z: 0 }
     // start loop
     function frame() {
+        // video frame rate may not different with page render rate
+        // pause() and play() to force video refresh frame
+        video.pause()
+        video.play()
         // external texture will be automatically destroyed as soon as JS returns
         // cannot be interrupt by any async functions before renderring
         // e.g. event callbacks, or await functions
-        // so need to re-load external video every frame 
+        // so need to re-load external video every frame
         const texture = device.importExternalTexture({
             source: video
         })
