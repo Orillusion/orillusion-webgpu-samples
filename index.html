@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orillusion Webgpu Samples</title>
+    <style>
+        html,
+        body {
+            font-family: Avenir,Helvetica,Arial,sans-serif;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+        .menu{
+            width: 200px;
+            height: 100%;
+            border-right: 1px solid #888;
+            overflow: auto;
+            padding: 0 10px;
+        }
+        .menu > a{
+            display: block;
+            margin: 5px 0;
+            color: #045b88;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        a:hover{
+            text-decoration: underline;
+        }
+        a.active{
+            color: red;
+        }
+        iframe{
+            flex-grow: 1;
+            border: none;
+        }
+        .src{
+            position: fixed;
+            right: 10px;
+            bottom: 10px;
+            height: 40px;
+            width: 40px;
+            background: #fff;
+            text-align: center;
+            font-size: 16px;
+            line-height: 40px;
+            border-radius: 50%;
+            border:none;
+            opacity: 0.6;
+            cursor: pointer;
+            text-decoration: none !important;
+        }
+        .src:hover{
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu">
+        <h3>WebGPU Samples</h3>
+        <a href="https://github.com/Orillusion/orillusion-webgpu-samples" target="_blank">Github</a>
+        <hr>
+        <a class="sample active" target="helloWebgpu">Hello WebGPU</a>
+        <a class="sample" target="basicTriangle">Basic Triangle</a>
+        <a class="sample" target="basicTriangleMSAA">Basic Triangle MSAA</a>
+        <a class="sample" target="colorTriangle">Color Triangle</a>
+        <a class="sample" target="rotatingCube">Rotating Cube</a>
+        <a class="sample" target="cubes">Cubes</a>
+        <a class="sample" target="cubesOffsets">Cubes with Offsets</a>
+        <a class="sample" target="cubesDynamicOffsets">Cubes with dynamicOffsets</a>
+        <a class="sample" target="cubesInstance">Cubes with Instance</a>
+        <a class="sample" target="cubesRenderBundle">Cubes with RenderBundle</a>
+        <a class="sample" target="imageTexture">Image Texture</a>
+        <a class="sample" target="spriteTexture">Sprites Texture</a>
+        <a class="sample" target="canvasTexture">Canvas Texture</a>
+        <a class="sample" target="videoTexture">Video Texture</a>
+        <a class="sample" target="basicLights">Basic Lights</a>
+        <a class="sample" target="shadowMapping">Shadow Mapping</a>
+        <a class="sample" target="gpuCompute">GPU Compute</a>
+        <a class="sample" target="gpuParticles">GPU Particles</a>
+    </div>
+    <iframe></iframe>
+    <a class="src" target="_blank">&lt; &gt;</a>
+    <script>
+        const iframe = document.querySelector('iframe')
+        const button = document.querySelector('.src')
+        const samples = document.querySelectorAll('.sample')
+        for(let sample of samples){
+            sample.addEventListener('click', ()=>{
+                window.location.hash = sample.target
+                iframe.src = './samples/' + sample.target + '.html'
+                button.href = 'https://github.com/Orillusion/orillusion-webgpu-samples/tree/main/src/' + sample.target + '.ts'
+                document.querySelector('.active').classList.remove('active')
+                sample.classList.add('active')
+            })
+        }
+        if(window.location.hash)
+            document.querySelector(`[target=${window.location.hash.slice(1)}]`).click()
+        else
+            document.querySelector('.sample.active').click()
+    </script>
+</body>
+</html>
