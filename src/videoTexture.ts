@@ -190,9 +190,15 @@ async function run() {
     // start loop
     function frame() {
         // video frame rate may not different with page render rate
-        // pause() and play() to force video refresh frame
-        video.pause()
-        video.play()
+        // we can use VideoFrame to force video decoding current frame
+        const videoFrame = new VideoFrame(video)
+        // it can be imported to webgpu as texture source with the `webgpu-developer-features` flag enabled
+        // const texture = device.importExternalTexture({
+        //     source: videoFrame // need `webgpu-developer-features`
+        // })
+        // but in this demo, we don't acctully use it, just close it
+        videoFrame.close()
+
         // external texture will be automatically destroyed as soon as JS returns
         // cannot be interrupt by any async functions before renderring
         // e.g. event callbacks, or await functions
@@ -200,6 +206,7 @@ async function run() {
         const texture = device.importExternalTexture({
             source: video
         })
+
         // also need to re-create a bindGroup for external texture
         const videoGroup = device.createBindGroup({
             layout: pipelineObj.pipeline.getBindGroupLayout(1),
