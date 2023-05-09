@@ -12,7 +12,7 @@ async function initWebGPU(canvas: HTMLCanvasElement) {
         throw new Error('No Adapter Found')
     const device = await adapter.requestDevice()
     const context = canvas.getContext('webgpu') as GPUCanvasContext
-    const format = navigator.gpu.getPreferredCanvasFormat ? navigator.gpu.getPreferredCanvasFormat() : context.getPreferredFormat(adapter)
+    const format = navigator.gpu.getPreferredCanvasFormat()
     const devicePixelRatio = window.devicePixelRatio || 1
     canvas.width = canvas.clientWidth * devicePixelRatio
     canvas.height = canvas.clientHeight * devicePixelRatio
